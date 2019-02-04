@@ -34,7 +34,7 @@ $(_cboot_lk_bin): PRIVATE_CUSTOM_TOOL_ARGS := \
 	TOOLCHAIN_PREFIX=$(ARM_EABI_TOOLCHAIN)/../../../aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 endif
 $(_cboot_lk_bin): PRIVATE_CUSTOM_TOOL_ARGS += \
-		BUILDROOT=$(PWD)/$(_cboot_intermediates) \
+		BUILDROOT=$(_cboot_intermediates) \
 		PROJECT=$(_cboot_project) \
 		NOECHO=$(hide) \
 		DEBUG=2 \
