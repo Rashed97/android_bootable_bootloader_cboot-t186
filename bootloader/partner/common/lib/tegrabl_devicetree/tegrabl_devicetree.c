@@ -609,3 +609,30 @@ tegrabl_error_t tegrabl_get_alias_id(char *prefix, char *alias_name,
 	}
 	return TEGRABL_ERR_NOT_FOUND;
 }
+
+tegrabl_error_t tegrabl_dt_create_space(void *fdt, uint32_t inc_size, uint32_t max_size)
+{
+	uint32_t newlen;
+	tegrabl_error_t err = TEGRABL_NO_ERROR;
+	int retval;
+
+	pr_info("%s(): %u\n", __func__, __LINE__);
+
+	newlen = fdt_totalsize(fdt) + inc_size;
+	pr_info("dtb     size: 0x%08x\n", fdt_totalsize(fdt));
+	pr_info("dtb new size: 0x%08x\n", newlen);
+
+	/* avoid overflow */
+	if (newlen > max_size) {
+		newlen = max_size;
+	}
+	pr_info("dtb new size: 0x%08x\n", newlen);
+
+	retval = fdt_open_into(fdt, fdt, newlen);
+	if (retval < 0) {
+		pr_error("fdt_open_into fail (%s)\n", fdt_strerror(retval));
+		err = TEGRABL_ERROR(TEGRABL_ERR_EXPAND_FAILED, 0);
+	}
+
+	return err;
+}

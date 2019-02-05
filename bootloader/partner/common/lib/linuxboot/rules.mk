@@ -19,6 +19,7 @@ MODULE_DEPS += \
 	$(LOCAL_DIR)/../tegrabl_board_info \
 	$(LOCAL_DIR)/../../../t18x/common/lib/odmdata \
 	$(LOCAL_DIR)/../../../t18x/common/lib/a_b_boot_control \
+	$(LOCAL_DIR)/../external/libufdt \
 	$(LOCAL_DIR)/../../../t18x/common/lib/partitionloader
 
 GLOBAL_INCLUDES += \
@@ -33,6 +34,7 @@ GLOBAL_INCLUDES += \
 MODULE_SRCS += \
 	$(LOCAL_DIR)/cmdline.c \
 	$(LOCAL_DIR)/dtb_update.c \
+	$(LOCAL_DIR)/dtb_overlay.c \
 	$(LOCAL_DIR)/../../../t18x/common/lib/linuxboot/$(TARGET)/linuxboot_helper.c \
 	$(LOCAL_DIR)/linux_load.c
 

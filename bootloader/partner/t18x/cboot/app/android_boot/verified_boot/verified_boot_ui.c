@@ -99,17 +99,20 @@ static status_t get_fingerprint(struct rsa_public_key *pub_key,
 }
 
 status_t verified_boot_yellow_state_ui(struct rsa_public_key *boot_pub_key,
-									   struct rsa_public_key *dtb_pub_key)
+									   struct rsa_public_key *dtb_pub_key,
+									   struct rsa_public_key *dtbo_pub_key)
 {
 	char *boot_fingerprint = NULL;
 	char *dtb_fingerprint = NULL;
+	char *dtbo_fingerprint = NULL;
 	char *footer_str = NULL;
 	status_t ret = NO_ERROR;
 
 	/* Over allocating for convenience
 	 * fingerprint footer format:
-	 * boot.img  : xxxx-xxxx-xxxx-xxxx
-	 * kernel-dtb: xxxx-xxxx-xxxx-xxxx */
+	 * boot.img   : xxxx-xxxx-xxxx-xxxx
+	 * kernel-dtb : xxxx-xxxx-xxxx-xxxx
+	 * kernel-dtbo: xxxx-xxxx-xxxx-xxxx */
 	footer_str = tegrabl_malloc(FINGERPRINT_LEN_BYTES * 2 + 32);
 	if (!footer_str)
 		return ERR_NO_MEMORY;
@@ -131,6 +134,15 @@ status_t verified_boot_yellow_state_ui(struct rsa_public_key *boot_pub_key,
 				dtb_fingerprint);
 	}
 
+	ret = get_fingerprint(dtbo_pub_key, &dtbo_fingerprint);
+	if (ret != NO_ERROR)
+		pr_error("Could not get RSA finger print of kernel-dtbo\n");
+	else {
+		pr_info("Kernel-dtbo public key fingerprint = %s\n", dtbo_fingerprint);
+		sprintf(footer_str + strlen(footer_str), "kernel-dtbo: %s\n",
+				dtbo_fingerprint);
+	}
+
 	yellow_state_menu_pause.menu_footer.ms.data = footer_str;
 	yellow_state_menu_continue.menu_footer.ms.data = footer_str;
 
@@ -138,6 +150,7 @@ status_t verified_boot_yellow_state_ui(struct rsa_public_key *boot_pub_key,
 
 	tegrabl_free(boot_fingerprint);
 	tegrabl_free(dtb_fingerprint);
+	tegrabl_free(dtbo_fingerprint);
 	tegrabl_free(footer_str);
 
 	return ret;

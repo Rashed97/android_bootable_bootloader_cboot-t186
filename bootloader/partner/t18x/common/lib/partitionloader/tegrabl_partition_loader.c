@@ -55,6 +55,7 @@ static char *tegrabl_get_partition_name(enum tegrabl_binary_type bin_type,
 								[TEGRABL_GPT_MAX_PARTITION_NAME + 1] = {
 		[TEGRABL_BINARY_KERNEL] = {"kernel"},
 		[TEGRABL_BINARY_KERNEL_DTB] = {"kernel-dtb"},
+		[TEGRABL_BINARY_KERNEL_DTBO] = {"kernel-dtbo"},
 		[TEGRABL_BINARY_RECOVERY_KERNEL] = {"SOS"},
 		[TEGRABL_BINARY_NCT] = {"NCT"}
 	};
@@ -91,6 +92,7 @@ static tegrabl_error_t a_b_get_bin_copy(enum tegrabl_binary_type bin_type,
 	switch (bin_type) {
 	case TEGRABL_BINARY_KERNEL:
 	case TEGRABL_BINARY_KERNEL_DTB:
+	case TEGRABL_BINARY_KERNEL_DTBO:
 		/* TODO: add a bin_type that supports a/b */
 		break;
 

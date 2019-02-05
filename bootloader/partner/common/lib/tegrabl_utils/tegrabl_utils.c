@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017, NVIDIA Corporation.  All rights reserved.
+ * Copyright (c) 2015-2018, NVIDIA Corporation.  All rights reserved.
  *
  * NVIDIA Corporation and its licensors retain all intellectual property and
  * proprietary rights in and to this software and related documentation.  Any
@@ -8,7 +8,10 @@
  * is strictly prohibited.
  */
 
+#include <stdint.h>
 #include <tegrabl_utils.h>
+#include <stdbool.h>
+#include <tegrabl_debug.h>
 
 /**
  * Pre calculated modulo 2 division remainder for 256 bytes combination
@@ -64,10 +67,11 @@ uint32_t tegrabl_utils_crc32(uint32_t val, void *buffer, size_t buffer_size)
 	uint32_t final_crc = val ^ ~0U;
 	uint8_t *buf = (uint8_t *) buffer;
 
-	while (buffer_size--) {
-		final_crc = (tegrabl_crc32_tab[(final_crc ^ *buf) & 0xFF] ^
+	while (buffer_size != 0U) {
+		final_crc = (tegrabl_crc32_tab[(final_crc ^ *buf) & 0xFFU] ^
 					(final_crc >> 8));
 		buf++;
+		buffer_size--;
 	}
 
 	return final_crc ^ ~0U;
@@ -78,9 +82,10 @@ uint32_t tegrabl_utils_checksum(void *buffer, size_t buffer_size)
 	uint8_t *buf = (uint8_t *)buffer;
 	uint32_t checksum = 0;
 
-	while(buffer_size--) {
+	while (buffer_size != 0U) {
 		checksum += *buf;
 		buf++;
+		buffer_size--;
 	}
 
 	return checksum;
@@ -88,22 +93,24 @@ uint32_t tegrabl_utils_checksum(void *buffer, size_t buffer_size)
 
 uint8_t tegrabl_utils_crc8(uint8_t *buffer, uint32_t len)
 {
-	uint8_t crc8 = 0, t, i, odd;
+	uint8_t crc8 = 0, t, i;
+	bool odd;
 
-	while (len--) {
-		odd = 0;
+	while (len != 0U) {
+		odd = false;
 
 		t = *buffer;
-		for (i = 0; i < 8; i++) {
-			odd = ((t ^ crc8) & 1) == 1;
+		for (i = 0; i < 8U; i++) {
+			odd = (((t ^ crc8) & 1U) == 1U);
 			crc8 >>= 1;
 			t >>= 1;
 			if (odd) {
-				crc8 ^= 0x8c;
+				crc8 ^= 0x8cU;
 			}
 		}
 
 		buffer++;
+		len--;
 	}
 
 	return crc8;
@@ -117,11 +124,130 @@ uint32_t tegrabl_utils_convert_to_binary(void *byte_ptr)
 	uint8_t byte_value = 0;
 
 	byte_value = *((uint8_t *)byte_ptr);
-	for (i = BITS_PER_BYTE; i != 0; i--) {
-		bit_value = byte_value & (1 << (i - 1));
-		bit_value = bit_value >> (i - 1);
-		byte_num = (byte_num * 10) + bit_value;
+	for (i = BITS_PER_BYTE; i != 0U; i--) {
+		bit_value = byte_value & (1U << (i - 1U));
+		bit_value = bit_value >> (i - 1U);
+		byte_num = (byte_num * 10U) + bit_value;
 	}
 
 	return byte_num;
+}
+
+unsigned long tegrabl_utils_strtoul(const char *nptr, char **endptr, int base)
+{
+	const char *s;
+	unsigned long acc, cutoff;
+	unsigned char c;
+	int neg, any;
+	uint32_t cutlim;
+	signed long temp;
+	/*
+	 * See strtol for comments as to the logic used.
+	 */
+	if ((base < 0) || (base == 1) || (base > 36)) {
+		if (endptr != 0) {
+			*endptr = (char *)nptr;
+		}
+		return 0;
+	}
+
+	s = nptr;
+	do {
+		c = (unsigned char) *s++;
+	} while (IS_SPACE(c));
+	if (c == '-') {
+		neg = 1;
+		c = (unsigned char) *s++;
+	} else {
+		neg = 0;
+		if (c == '+') {
+			c = (unsigned char) *s++;
+		}
+	}
+	if (((base == 0) || (base == 16)) &&
+	    (c == '0') && ((*s == 'x') || (*s == 'X'))) {
+		c = (unsigned char)s[1];
+		s += 2;
+		base = 16;
+	}
+	if (base == 0) {
+		base = ((c == '0') ? 8 : 10);
+	}
+
+	cutoff = ((unsigned long)ULONG_MAX) / ((unsigned long)base);
+	cutlim = ((unsigned long)ULONG_MAX) % ((unsigned long)base);
+	for (acc = 0, any = 0;; c = (unsigned char) *s++) {
+		if (IS_DIGITAL(c)) {
+			c -= '0';
+		} else if ((IS_ALPHA(c))) {
+			c -= IS_UPPER(c) ? ('A' - 10) : ('a' - 10);
+		} else {
+			break;
+		}
+		if (c >= ((unsigned char)base)) {
+			break;
+		}
+		if (any < 0) {
+			continue;
+		}
+		if (acc > cutoff || (acc == cutoff && c > cutlim)) {
+			any = -1;
+			acc = (unsigned long)ULONG_MAX;
+		} else {
+			any = 1;
+			acc *= (unsigned long)base;
+			acc += c;
+		}
+	}
+	if ((neg != 0) && (any > 0)) {
+		temp = ((signed long)acc) * (-1L);
+		acc = (unsigned long) temp;
+	}
+	if (endptr != 0) {
+		*endptr = (char *) ((any != 0) ? (s - 1) : nptr);
+	}
+	return acc;
+}
+
+void tegrabl_utils_dump_mem(uintptr_t addr, uint32_t size)
+{
+	uint32_t *ptr;
+	uintptr_t end = addr + size;
+
+	for (ptr = (uint32_t *)addr; ptr < (uint32_t *)end; ptr += 4) {
+		pr_info("%p: 0x%08x 0x%08x 0x%08x 0x%08x\n",
+				ptr, ptr[0], ptr[1], ptr[2], ptr[3]);
+	}
+}
+
+/* Byte swap utilities */
+
+/* Swap an unsigned int (uint32_t) from be32 to le32 */
+uint32_t be32tole32(uint32_t data)
+{
+	uint8_t *dptr = (uint8_t *)&data;
+	uint32_t result;
+
+	result = ((uint32_t)dptr[0]) << 24;
+	result |= ((uint32_t)dptr[1]) << 16;
+	result |= ((uint32_t)dptr[2]) << 8;
+	result |= ((uint32_t)dptr[3]);
+
+	return result;
+}
+
+/* Swap an unsigned int (uint32_t) from le32 to be32 */
+uint32_t le32tobe32(uint32_t data)
+{
+	union {
+		uint32_t dword;
+		uint8_t bytes[4];
+	} result;
+
+	result.bytes[0] = (data >> 24) & 0xFF;
+	result.bytes[1] = (data >> 16) & 0xFF;
+	result.bytes[2] = (data >> 8) & 0xFF;
+	result.bytes[3] = data & 0xFF;
+
+	return result.dword;
 }

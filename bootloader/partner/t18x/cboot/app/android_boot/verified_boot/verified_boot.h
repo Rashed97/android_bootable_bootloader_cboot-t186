@@ -48,6 +48,7 @@ struct root_of_trust {
 	uint32_t magic_header;
 	uint32_t version;
 	uint8_t dtb_pub_key[RSANUMBYTES];
+	uint8_t dtbo_pub_key[RSANUMBYTES];
 	uint8_t boot_pub_key[RSANUMBYTES];
 	uint8_t is_unlocked;
 };
@@ -60,6 +61,7 @@ struct root_of_trust {
  *
  * @param hdr boot.img header address
  * @param kernel_dtb kernel-dtb load address
+ * @param kernel_dtbo kernel-dtbo load address
  * @param bs boot state value returned
  * @param boot_pub_key The public key that the boot.img was verified with. The
  *					   caller needs to: 1) Allocate memory 2) Initialize the mem
@@ -67,14 +69,19 @@ struct root_of_trust {
  * @param dtb_pub_key  The public key that the kernel-dtb was verified with. The
  *					   caller needs to: 1) Allocate memory 2) Initialize the mem
  *					   chunk to 0
+ * @param dtbo_pub_key The public key that the kernel-dtbo was verified with. The
+ *					   caller needs to: 1) Allocate memory 2) Initialize the mem
+ *					   chunk to 0
  *
  * @return NO_ERROR if boot state is conclusively determined, else apt error
  */
 status_t verified_boot_get_boot_state(union tegrabl_bootimg_header *hdr,
 									  void *kernel_dtb,
+									  void *kernel_dtbo,
 									  enum boot_state *bs,
 									  struct rsa_public_key *boot_pub_key,
-									  struct rsa_public_key *dtb_pub_key);
+									  struct rsa_public_key *dtb_pub_key,
+									  struct rsa_public_key *dtbo_pub_key);
 
 /**
  * @brief Display UI for certain states
@@ -82,13 +89,15 @@ status_t verified_boot_get_boot_state(union tegrabl_bootimg_header *hdr,
  * @param bs boot state to display the UI for
  * @param boot_pub_key Public key the boot image validated with, NULL if none
  * @param dtb_pub_key Public key the kernel-dtb validated with, NULL if none
+ * @param dtbo_pub_key Public key the kernel-dtbo validated with, NULL if none
  *
  * @return NO_ERROR on successfully getting confirmation from user to boot in
  *					the relevant state
  */
 status_t verified_boot_ui(enum boot_state bs,
 						  struct rsa_public_key *boot_pub_key,
-						  struct rsa_public_key *dtb_pub_key);
+						  struct rsa_public_key *dtb_pub_key,
+						  struct rsa_public_key *dtbo_pub_key);
 
 /**
  * @brief SMC Call into the monitor
@@ -105,11 +114,12 @@ uint32_t smc_call(uint32_t arg0, uintptr_t arg1, uintptr_t arg2);
  *
  * @param hdr boot.img header address
  * @param kernel_dtb kernel-dtb address
+ * @param kernel_dtbo kernel-dtbo address
  *
  * @return NO_ERROR if all process is successfully, else apt error
  */
 
 tegrabl_error_t verify_boot(union tegrabl_bootimg_header *hdr,
-							void *kernel_dtb);
+							void *kernel_dtb, void *kernel_dtbo);
 
 #endif

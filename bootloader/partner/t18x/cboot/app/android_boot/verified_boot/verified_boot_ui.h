@@ -29,7 +29,8 @@ status_t verified_boot_red_state_ui(void);
  * @return NO_ERROR on success, else apt error
  */
 status_t verified_boot_yellow_state_ui(struct rsa_public_key *boot_pub_key,
-									   struct rsa_public_key *dtb_pub_key);
+									   struct rsa_public_key *dtb_pub_key,
+									   struct rsa_public_key *dtbo_pub_key);
 
 /**
  * @brief Display UI for Orange State

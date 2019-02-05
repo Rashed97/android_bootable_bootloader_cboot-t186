@@ -25,6 +25,8 @@
 #include <tegrabl_devicetree.h>
 #include <tegrabl_partition_loader.h>
 #include <tegrabl_decompress.h>
+#include <tegrabl_malloc.h>
+#include <dtb_overlay.h>
 
 static uint64_t ramdisk_load;
 static uint64_t ramdisk_size;
@@ -33,22 +35,10 @@ static char *bootimg_cmdline;
 /* maximum possible uncompressed kernel image size--60M */
 #define MAX_KERNEL_IMAGE_SIZE (1024 * 1024 * 60)
 
-#define FDT_SIZE_BL_DT_NODES (4048 + 4048)
-static tegrabl_error_t fdt_create_space(void *fdt)
-{
-	uint32_t newlen;
-	tegrabl_error_t err = TEGRABL_NO_ERROR;
-	int retval;
+/* device tree overlay size--1M */
+#define KERNEL_DTBO_PART_SIZE	(1024 * 1024 * 1)
 
-	newlen = fdt_totalsize(fdt) + FDT_SIZE_BL_DT_NODES;
-	retval = fdt_open_into(fdt, fdt, newlen);
-	if (retval < 0) {
-		pr_error("fdt_open_into fail (%s)\n", fdt_strerror(retval));
-		err = tegrabl_error_value(TEGRABL_ERR_LINUXBOOT, 0,
-								  TEGRABL_ERR_DT_EXPAND_FAILED);
-	}
-	return err;
-}
+#define FDT_SIZE_BL_DT_NODES (4048 + 4048)
 
 void tegrabl_get_ramdisk_info(uint64_t *start, uint64_t *size)
 {
@@ -181,17 +171,18 @@ static tegrabl_error_t extract_ramdisk(union tegrabl_bootimg_header *hdr)
 }
 
 #if !defined(CONFIG_DT_SUPPORT)
-static tegrabl_error_t extract_kernel_dtb(void **kernel_dtb)
+static tegrabl_error_t extract_kernel_dtb(void **kernel_dtb, void *kernel_dtbo)
 {
 	return TEGRABL_NO_ERROR;
 }
 #else
-static tegrabl_error_t extract_kernel_dtb(void **kernel_dtb)
+static tegrabl_error_t extract_kernel_dtb(void **kernel_dtb, void *kernel_dtbo)
 {
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 
-	err = fdt_create_space(*kernel_dtb);
+	err = tegrabl_dt_create_space(*kernel_dtb, FDT_SIZE_BL_DT_NODES, DTB_MAX_SIZE);
 	if (err != TEGRABL_NO_ERROR) {
+		TEGRABL_SET_HIGHEST_MODULE(err);
 		goto fail;
 	}
 
@@ -206,6 +197,15 @@ static tegrabl_error_t extract_kernel_dtb(void **kernel_dtb)
 		goto fail;
 	}
 
+	pr_debug("kernel-dtbo @ %p\n", kernel_dtbo);
+#if defined(CONFIG_ENABLE_DTB_OVERLAY)
+	err = tegrabl_dtb_overlay(kernel_dtb, kernel_dtbo);
+	if (err != TEGRABL_NO_ERROR) {
+		pr_warn("Booting with default kernel-dtb!!!\n");
+		err = TEGRABL_NO_ERROR;
+	}
+#endif
+
 fail:
 	return err;
 }
@@ -219,6 +219,7 @@ tegrabl_error_t tegrabl_load_kernel_and_dtb(
 			void *data)
 {
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
+	void *kernel_dtbo = NULL;
 	union tegrabl_bootimg_header *hdr = (void *)((uintptr_t)0xDEADDEA0);
 
 	if (!kernel_entry_point || !kernel_dtb) {
@@ -261,6 +262,22 @@ load_dtb:
 			goto fail;
 		}
 	}
+#if defined(CONFIG_ENABLE_DTB_OVERLAY)
+	/* kernel_dtbo should also be protected by verified boot */
+	kernel_dtbo = tegrabl_malloc(KERNEL_DTBO_PART_SIZE);
+	if (!kernel_dtbo) {
+		pr_error("Failed to allocate memory\n");
+		err = TEGRABL_ERROR(TEGRABL_ERR_NO_MEMORY, 0);
+		return err;
+	}
+
+	err = tegrabl_load_binary(TEGRABL_BINARY_KERNEL_DTBO, kernel_dtbo, NULL);
+	if (err != TEGRABL_NO_ERROR) {
+		pr_error("Error %u loading kernel-dtbo\n", err);
+		goto fail;
+	}
+	pr_info("Lernel DTBO @ %p\n", kernel_dtbo);
+#endif /* CONFIG_ENABLE_DTB_OVERLAY */
 #else
 	*kernel_dtb = (void *)((uintptr_t)DTB_LOAD_ADDRESS);
 #endif /* CONFIG_BACKDOOR_LOAD */
@@ -271,7 +288,7 @@ load_dtb:
 	pr_info("Kernel DTB @ %p\n", *kernel_dtb);
 
 	if (callbacks != NULL && callbacks->verify_boot != NULL)
-		callbacks->verify_boot(hdr, *kernel_dtb);
+		callbacks->verify_boot(hdr, *kernel_dtb, kernel_dtbo);
 
 	err = extract_kernel(hdr, kernel_entry_point);
 	if (err != TEGRABL_NO_ERROR) {
@@ -285,7 +302,7 @@ load_dtb:
 		goto fail;
 	}
 
-	err = extract_kernel_dtb(kernel_dtb);
+	err = extract_kernel_dtb(kernel_dtb, kernel_dtbo);
 	if (err != TEGRABL_NO_ERROR) {
 		pr_error("Error %u loading the kernel DTB\n", err);
 		goto fail;
@@ -294,5 +311,6 @@ load_dtb:
 	pr_info("%s: Done\n", __func__);
 
 fail:
+	tegrabl_free(kernel_dtbo);
 	return err;
 }

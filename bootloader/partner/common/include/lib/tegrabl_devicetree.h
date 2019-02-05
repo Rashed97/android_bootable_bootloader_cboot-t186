@@ -492,4 +492,15 @@ tegrabl_error_t tegrabl_get_alias_by_name(const void *fdt_ptr, char *name,
 tegrabl_error_t tegrabl_get_alias_id(char *prefix, char *alias_name,
 		int *alias_id);
 
+/**
+ * @brief Create DT space by given size for fdt handle
+ *
+ * @param fdt pointer to fdt handle.
+ * @param inc_size increaed size to be created.
+ * @param max_size max space size available.
+ *
+ * @return TEGRABL_NO_ERROR in case of success else error code.
+ */
+tegrabl_error_t tegrabl_dt_create_space(void *fdt, uint32_t inc_size, uint32_t max_size);
+
 #endif /* __TEGRABL_DEVICETREE_H__ */

@@ -56,9 +56,9 @@
 	 (BITFIELD_ONES(TEGRABL_ERR_MODULE_WIDTH)))
 
 #define TEGRABL_ERROR_PRINT(error)							\
-	pr_critical("ERROR: Highest Layer Module = 0x%x, "		\
-			"Lowest Layer Module = 0x%x,\n"					\
-			"Aux Info = 0x%x, Reason = 0x%x\n",				\
+	pr_critical("ERROR: Highest Layer Module = 0x%lu, "		\
+			"Lowest Layer Module = 0x%lu,\n"					\
+			"Aux Info = 0x%lu, Reason = 0x%lu\n",				\
 			TEGRABL_ERROR_HIGHEST_MODULE(error),			\
 			TEGRABL_ERROR_MODULE(error),					\
 			TEGRABL_ERROR_AUX_INFO(error),					\
@@ -168,6 +168,8 @@ typedef enum {
 	TEGRABL_ERR_XUSB_DEV_RESPONSE_ERR = 0x40,
 	TEGRABL_ERR_XUSB_RETRY = 0x41,
 	TEGRABL_ERR_XUSB_COMMAND_FAIL = 0x42,
+
+	TEGRABL_ERR_EXPAND_FAILED = 0x43,
 
 	TEGRABL_ERR_REASON_MAX = 0x100,
 } tegrabl_err_reason_t;

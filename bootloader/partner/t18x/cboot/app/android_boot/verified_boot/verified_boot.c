@@ -354,15 +354,19 @@ static bool s_boot_image_verified;
 static enum boot_state s_boot_state; /* Possible values: red/yellow/green */
 
 status_t verified_boot_get_boot_state(union tegrabl_bootimg_header *hdr,
-									  void *kernel_dtb, enum boot_state *bs,
+									  void *kernel_dtb, void *kernel_dtbo,
+									  enum boot_state *bs,
 									  struct rsa_public_key *boot_pub_key,
-									  struct rsa_public_key *dtb_pub_key)
+									  struct rsa_public_key *dtb_pub_key,
+									  struct rsa_public_key *dtbo_pub_key)
 {
 	status_t ret = NO_ERROR;
-	enum boot_state bs_dtb, bs_boot;
+	enum boot_state bs_dtb, bs_dtbo, bs_boot;
 	size_t dtb_size;
+	size_t dtbo_size;
 	size_t boot_size;
 	uint8_t *dtb_sig_section;  /* Pointer to signature section of kernel-dtb */
+	uint8_t *dtbo_sig_section;  /* Pointer to signature section of kernel-dtbo */
 	uint8_t *boot_sig_section; /* Pointer to signature section of boot img */
 
 	if (!(tegrabl_odmdata_get() & (1 << TEGRA_BOOTLOADER_LOCK_BIT))) {
@@ -391,10 +395,19 @@ status_t verified_boot_get_boot_state(union tegrabl_bootimg_header *hdr,
 		if (ret != NO_ERROR)
 			return ret;
 
+		/* Get kernel-dtbo boot state */
+		dtbo_size = fdt_totalsize(kernel_dtbo);
+		dtbo_sig_section = (uint8_t *)(kernel_dtbo) + dtbo_size;
+		pr_info("Verifying boot: kernel-dtbo\n");
+		ret = verify_image((uintptr_t)kernel_dtbo, dtbo_size,
+						   (uintptr_t)dtbo_sig_section, &bs_dtbo, dtbo_pub_key);
+		if (ret != NO_ERROR)
+			return ret;
+
 		/* Verified boot states Red, Yellow and Green are arranged in increasing
 		 * order of level of trust (Red < Yellow < Green), hence set the overall
 		 * state to the minimum of the values */
-		*bs = MIN(bs_boot, bs_dtb);
+		*bs = MIN(bs_boot, MIN(bs_dtb, bs_dtbo));
 
 		s_boot_state = *bs;			  /* Cache the boot state */
 		s_boot_image_verified = true; /* Mark the boot state cached */
@@ -404,13 +417,14 @@ status_t verified_boot_get_boot_state(union tegrabl_bootimg_header *hdr,
 
 status_t verified_boot_ui(enum boot_state bs,
 						  struct rsa_public_key *boot_pub_key,
-						  struct rsa_public_key *dtb_pub_key)
+						  struct rsa_public_key *dtb_pub_key,
+						  struct rsa_public_key *dtbo_pub_key)
 {
 	switch (bs) {
 	case VERIFIED_BOOT_RED_STATE:
 		return verified_boot_red_state_ui();
 	case VERIFIED_BOOT_YELLOW_STATE:
-		return verified_boot_yellow_state_ui(boot_pub_key, dtb_pub_key);
+		return verified_boot_yellow_state_ui(boot_pub_key, dtb_pub_key, dtbo_pub_key);
 	case VERIFIED_BOOT_ORANGE_STATE:
 		return verified_boot_orange_state_ui();
 	default:
@@ -419,7 +433,7 @@ status_t verified_boot_ui(enum boot_state bs,
 }
 
 tegrabl_error_t verify_boot(union tegrabl_bootimg_header *hdr,
-							void *kernel_dtb)
+							void *kernel_dtb, void *kernel_dtbo)
 {
 	status_t ret = NO_ERROR;
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
@@ -427,6 +441,7 @@ tegrabl_error_t verify_boot(union tegrabl_bootimg_header *hdr,
 	struct root_of_trust r_o_t_params;
 	struct rsa_public_key *vb_pub_key_boot = NULL;
 	struct rsa_public_key *vb_pub_key_dtb = NULL;
+	struct rsa_public_key *vb_pub_key_dtbo = NULL;
 	const char *bs_str = NULL;
 
 	vb_pub_key_boot = calloc(1, sizeof(struct rsa_public_key));
@@ -441,9 +456,16 @@ tegrabl_error_t verify_boot(union tegrabl_bootimg_header *hdr,
 		err = TEGRABL_ERROR(TEGRABL_ERR_NO_MEMORY, 0);
 		goto exit;
 	}
+	vb_pub_key_dtbo = calloc(1, sizeof(struct rsa_public_key));
+	if (!vb_pub_key_dtbo) {
+		pr_error("No memory to hold verified boot public key\n");
+		err = TEGRABL_ERROR(TEGRABL_ERR_NO_MEMORY, 0);
+		goto exit;
+	}
 
-	ret = verified_boot_get_boot_state(hdr, kernel_dtb, &bs, vb_pub_key_boot,
-									   vb_pub_key_dtb);
+	ret = verified_boot_get_boot_state(hdr, kernel_dtb, kernel_dtbo, &bs, vb_pub_key_boot,
+									   vb_pub_key_dtb,
+									   vb_pub_key_dtbo);
 	if (ret != NO_ERROR)
 		panic("An error occured in verified boot module.\n");
 
@@ -454,6 +476,8 @@ tegrabl_error_t verify_boot(union tegrabl_bootimg_header *hdr,
 		   sizeof(r_o_t_params.boot_pub_key));
 	memcpy(r_o_t_params.dtb_pub_key, vb_pub_key_dtb->n,
 		   sizeof(r_o_t_params.dtb_pub_key));
+	memcpy(r_o_t_params.dtbo_pub_key, vb_pub_key_dtbo->n,
+		   sizeof(r_o_t_params.dtbo_pub_key));
 	if (bs == VERIFIED_BOOT_ORANGE_STATE)
 		r_o_t_params.is_unlocked = 1;
 	else
@@ -495,9 +519,11 @@ tegrabl_error_t verify_boot(union tegrabl_bootimg_header *hdr,
 	}
 
 	if (bs != VERIFIED_BOOT_GREEN_STATE)
-		verified_boot_ui(bs, vb_pub_key_boot, vb_pub_key_dtb);
+		verified_boot_ui(bs, vb_pub_key_boot, vb_pub_key_dtb, vb_pub_key_dtbo);
 
 exit:
+	if (vb_pub_key_dtbo)
+		free(vb_pub_key_dtbo);
 	if (vb_pub_key_dtb)
 		free(vb_pub_key_dtb);
 	if (vb_pub_key_boot)

@@ -23,6 +23,7 @@ const struct tegrabl_fastboot_partition_info
 	{ "recovery", "SOS_a", "SOS_b"},
 	{ "boot", "kernel_a", "kernel_b"},
 	{ "dtb", "kernel-dtb_a", "kernel-dtb_b"},
+	{ "dtbo", "kernel-dtbo_a", "kernel-dtbo_b"},
 	{ "system", "APP_a", "APP_b"},
 	{ "cache", "CAC", NULL},
 	{ "userdata", "UDA", NULL},

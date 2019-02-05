@@ -43,7 +43,11 @@ enum tegrabl_binary_type {
 	TEGRABL_BINARY_RPB = 22,			/* 0x16 Rollback Prevention Bypass
 												token */
 	TEGRABL_BINARY_MB2_RAMDUMP = 23,	/* 0x17  MB2 binary for ramdump */
-	TEGRABL_BINARY_MAX = 24				/* 0x18 */
+	TEGRABL_BINARY_KERNEL = 24,		/* 0x18 */
+	TEGRABL_BINARY_RECOVERY_KERNEL = 25,	/* 0x19 */
+	TEGRABL_BINARY_NCT = 26,		/* 0x1a */
+	TEGRABL_BINARY_KERNEL_DTBO = 27,	/* 0x1b Kernel DTB overlay */
+	TEGRABL_BINARY_MAX = 28				/* 0x1c */
 };
 
 /**
