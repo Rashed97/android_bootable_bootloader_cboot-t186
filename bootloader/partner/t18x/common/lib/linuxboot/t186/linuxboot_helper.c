@@ -299,6 +299,69 @@ static int add_ratchet_values(char *cmdline, int len, char *param, void *priv)
 	return tegrabl_snprintf(cmdline, len, "%s=%u.%u.%u ", param,
 							rb_ratchet, mb1_ratchet, mts_ratchet);
 }
+
+bool is_system_as_root_enabled(void)
+{
+	tegrabl_error_t err = TEGRABL_NO_ERROR;
+	bool ret = true;
+	void *fdt;
+	int fw_node, fstab_node, sys_node;
+
+	/* Check dtb to see if system as root is enabled */
+	err = tegrabl_dt_get_fdt_handle(TEGRABL_DT_BL, &fdt);
+	if (err != TEGRABL_NO_ERROR) {
+		goto fail;
+	}
+	err = tegrabl_dt_get_node_with_path(fdt, "/firmware/android", &fw_node);
+	if (err != TEGRABL_NO_ERROR) {
+		goto fail;
+	}
+	err = tegrabl_dt_get_node_with_compatible(fdt, fw_node, "android,fstab", &fstab_node);
+	if (err != TEGRABL_NO_ERROR) {
+		goto fail;
+	}
+	err = tegrabl_dt_get_node_with_compatible(fdt, fstab_node, "android,system", &sys_node);
+	if (err == TEGRABL_NO_ERROR) {
+		/* if DT node exists, system as root is disabld hence no extra cmdline param */
+		ret = false;
+	}
+fail:
+	return ret;
+}
+
+#if defined(CONFIG_ENABLE_SYSTEM_AS_ROOT)
+static int add_boot_recovery_info(char *cmdline, int len, char *param,
+								  void *priv)
+{
+	enum tegrabl_binary_type bin_type;
+	int ret = -1;
+	bool is_system_root_enabled;
+
+	TEGRABL_UNUSED(priv);
+
+	if (!cmdline || !param) {
+		goto done;
+	}
+
+	is_system_root_enabled = is_system_as_root_enabled();
+
+	if (!is_system_root_enabled) {
+		/* there is recovery partition hence no extra cmdline param */
+		ret = 0;
+		goto done;
+	}
+
+	bin_type = tegrabl_get_kernel_type();
+	if (bin_type != TEGRABL_BINARY_RECOVERY_KERNEL) {
+		ret = tegrabl_snprintf(cmdline, len, "%s init=/init ", param);
+	} else {
+		ret = tegrabl_snprintf(cmdline, len, "init=/init ");
+	}
+
+done:
+	return ret;
+}
+#endif /* CONFIG_ENABLE_SYSTEM_AS_ROOT */
 #endif
 
 static int tegrabl_linuxboot_add_vpr_info(char *cmdline, int len,
@@ -449,6 +512,9 @@ static struct tegrabl_linuxboot_param extra_params[] = {
 	{ "androidboot.slot_suffix", add_boot_slot_suffix, NULL },
 	{ "androidboot.ratchetvalues", add_ratchet_values, NULL },
 #endif
+#if defined(CONFIG_ENABLE_SYSTEM_AS_ROOT)
+	{ "skip_initramfs", add_boot_recovery_info, NULL },
+#endif	/* CONFIG_ENABLE_SYSTEM_AS_ROOT */
 #endif
 	{ "androidboot.serialno", add_serialno, NULL },
 	{ "vpr", tegrabl_linuxboot_add_vpr_info, NULL },
