@@ -404,6 +404,29 @@ static int add_vb_boot_state(char *cmdline, int len, char *param, void *priv)
 
 	return tegrabl_snprintf(cmdline, len, "%s=%s ", param, cmdline_vb_boot_state);
 }
+
+static const char *cmdline_vbmeta_info;
+tegrabl_error_t tegrabl_linuxboot_set_vbmeta_info(const char *vbmeta)
+{
+	cmdline_vbmeta_info = vbmeta;
+	return TEGRABL_NO_ERROR;
+}
+
+static int add_vbmeta_info(char *cmdline, int len, char *param, void *priv)
+{
+	TEGRABL_UNUSED(priv);
+	TEGRABL_UNUSED(param);
+
+	if (!cmdline || !param) {
+		return -1;
+	}
+
+	if (!cmdline_vbmeta_info) {
+		return 0;
+	}
+
+	return tegrabl_snprintf(cmdline, len, "%s ", cmdline_vbmeta_info);
+}
 #endif
 
 static struct tegrabl_linuxboot_param extra_params[] = {
@@ -414,7 +437,8 @@ static struct tegrabl_linuxboot_param extra_params[] = {
 	{ "android.kerneltype", add_kerneltype, NULL },
 	{ "androidboot.security", add_secure_state, NULL },
 #if defined(CONFIG_ENABLE_VERIFIED_BOOT)
-	{"androidboot.verifiedbootstate", add_vb_boot_state, NULL },
+	{ "androidboot.verifiedbootstate", add_vb_boot_state, NULL },
+	{ "androidboot.vbmeta", add_vbmeta_info, NULL },
 #endif
 #endif	/* !OS_IS_L4T */
 #if defined(CONFIG_ENABLE_A_B_SLOT)

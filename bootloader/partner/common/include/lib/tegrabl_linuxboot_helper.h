@@ -74,6 +74,16 @@ int32_t bom_compare(const uint32_t a, const uint32_t b);
 void sort(uint32_t array[], int32_t count);
 
 
+#if defined(CONFIG_ENABLE_VERIFIED_BOOT)
+/**
+ * @brief Helper API (with BL-specific implementation), to set vbmeta info to
+ *        be used in cmdline if needed
+ *
+ * @param vbmeta vbmeta info string provided by libavb
+ *
+ * @return TEGRABL_NO_ERROR if successful, otherwise appropriate error code
+ */
+tegrabl_error_t tegrabl_linuxboot_set_vbmeta_info(const char *vbmeta);
 
 /**
  * @brief Helper API (with BL-specific implementation), to set vbstate to be
@@ -84,6 +94,7 @@ void sort(uint32_t array[], int32_t count);
  * @return TEGRABL_NO_ERROR if successful, otherwise appropriate error code
  */
 tegrabl_error_t tegrabl_linuxboot_set_vbstate(const char *vbstate);
+#endif
 
 /**
  * @brief Represents what processing is required for a commandline parameter
