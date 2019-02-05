@@ -43,6 +43,7 @@
 #include <tegrabl_carveout_usage.h>
 #include <arfuse.h>
 #include <tegrabl_page_allocator.h>
+#include <tegrabl_partition_manager.h>
 
 #define SDRAM_START_ADDRESS             0x80000000
 
@@ -492,6 +493,34 @@ static int add_vbmeta_info(char *cmdline, int len, char *param, void *priv)
 }
 #endif
 
+#define ROOTFS_PART_NAME "APP"
+static int add_rootfs_info(char *cmdline, int len, char *param, void *priv)
+{
+	struct tegrabl_partition current_system_partition = {0};
+	char *root_part_name;
+	char *slot_suffix;
+
+	slot_suffix = "";
+#if defined(CONFIG_ENABLE_A_B_SLOT)
+	tegrabl_error_t status;
+
+	status = tegrabl_a_b_get_bootslot_suffix(slot_suffix, true);
+	if (status != TEGRABL_NO_ERROR)
+		return TEGRABL_ERROR(TEGRABL_ERR_INVALID, 1);
+#endif
+	root_part_name = ROOTFS_PART_NAME;
+	strcat(root_part_name, slot_suffix);
+	pr_info("Using %s for root device", root_part_name);
+	tegrabl_partition_open(root_part_name, &current_system_partition);
+	uint64_t root_device_index = current_system_partition.offset;
+
+	if (!cmdline || !param) {
+		return -1;
+	}
+
+	return tegrabl_snprintf(cmdline, len, "%s=/dev/mmcblk0p%lu ro rootwait rootfstype=ext4 ", param, root_device_index);
+}
+
 static struct tegrabl_linuxboot_param extra_params[] = {
 	{ "tegraid", add_tegraid, NULL },
 	{ "tegra_keep_boot_clocks", tegrabl_linuxboot_add_string, NULL},
@@ -516,6 +545,7 @@ static struct tegrabl_linuxboot_param extra_params[] = {
 	{ "skip_initramfs", add_boot_recovery_info, NULL },
 #endif	/* CONFIG_ENABLE_SYSTEM_AS_ROOT */
 #endif
+	{ "root", add_rootfs_info, NULL },
 	{ "androidboot.serialno", add_serialno, NULL },
 	{ "vpr", tegrabl_linuxboot_add_vpr_info, NULL },
 	{ "vpr_resize", tegrabl_linuxboot_add_vprresize_info, NULL },
