@@ -20,14 +20,14 @@
 
 const struct tegrabl_fastboot_partition_info
 	fastboot_partition_map_table[] = {
-	{ "recovery", "SOS", "SOS_b"},
-	{ "boot", "kernel", "kernel_b"},
-	{ "dtb", "kernel-dtb", "kernel-dtb_b"},
-	{ "system", "APP", "APP_b"},
+	{ "recovery", "SOS_a", "SOS_b"},
+	{ "boot", "kernel_a", "kernel_b"},
+	{ "dtb", "kernel-dtb_a", "kernel-dtb_b"},
+	{ "system", "APP_a", "APP_b"},
 	{ "cache", "CAC", NULL},
 	{ "userdata", "UDA", NULL},
-	{ "vendor", "vendor", "vendor_b"},
-	{ "bmp", "BMP", "BMP_b"},
+	{ "vendor", "vendor_a", "vendor_b"},
+	{ "bmp", "BMP_a", "BMP_b"},
 	{ "rpb", "RPB", NULL},
 };
 
