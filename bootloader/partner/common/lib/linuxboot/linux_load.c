@@ -166,6 +166,7 @@ static tegrabl_error_t extract_ramdisk(union tegrabl_bootimg_header *hdr)
 				(void *)((uintptr_t)ramdisk_offset), ramdisk_size);
 	}
 	bootimg_cmdline = (char *)hdr->cmdline;
+	pr_info("Loaded cmdline from bootimage: %s\n", bootimg_cmdline);
 
 	return err;
 }

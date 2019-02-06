@@ -224,7 +224,14 @@ static int tegrabl_linuxboot_add_secureos_name(char *cmdline, int len,
 	return tegrabl_snprintf(cmdline, len, "%s=%s ", param, tos_name);
 }
 
+static int tegrabl_linuxboot_add_bootimg_cmdline(char *cmdline, int len,
+	char *param, void *priv)
+{
+	return tegrabl_snprintf(cmdline, len, "%s", tegrabl_get_bootimg_cmdline());
+}
+
 static struct tegrabl_linuxboot_param common_params[] = {
+	{ "", tegrabl_linuxboot_add_bootimg_cmdline, NULL },
 	{ "memtype", tegrabl_linuxboot_add_string, "0" },
 	{ "tzram", tegrabl_linuxboot_add_carveout,
 		(void *)((uintptr_t)TEGRABL_LINUXBOOT_CARVEOUT_TOS) },
