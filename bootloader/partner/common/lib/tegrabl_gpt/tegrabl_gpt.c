@@ -302,6 +302,7 @@ tegrabl_error_t tegrabl_gpt_publish(tegrabl_bdev_t *dev,
 		}
 
 		partitions[j].name[i] = '\0';
+		partitions[j].id = j + 1;
 		start_sector = entries[j].first_lba;
 		num_sectors = entries[j].last_lba - start_sector + 1;
 		partitions[j].start_sector = start_sector;

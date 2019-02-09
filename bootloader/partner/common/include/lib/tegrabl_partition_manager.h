@@ -19,11 +19,10 @@
 
 /**
  * @brief Stores the information about partition.
- *
- * TODO:Add id to name mapping.
  */
 struct tegrabl_partition_info {
 	char name[MAX_PARTITION_NAME];
+	uint32_t id;
 	uint64_t start_sector;
 	uint64_t num_sectors;
 	uint64_t total_size;
