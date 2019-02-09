@@ -519,6 +519,7 @@ static int add_rootfs_info(char *cmdline, int len, char *param, void *priv)
 		return -1;
 	}
 
+	// TODO: Read and automatically set rootfstype rather than hardcode to ext4
 	return tegrabl_snprintf(cmdline, len, "%s=/dev/mmcblk0p%d ro rootwait rootfstype=ext4 ", param, root_device_index);
 }
 
