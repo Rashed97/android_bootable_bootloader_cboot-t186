@@ -510,15 +510,16 @@ static int add_rootfs_info(char *cmdline, int len, char *param, void *priv)
 #endif
 	root_part_name = ROOTFS_PART_NAME;
 	strcat(root_part_name, slot_suffix);
-	pr_info("Using %s for root device", root_part_name);
+	pr_error("Using %s for root device", root_part_name);
 	tegrabl_partition_open(root_part_name, &current_system_partition);
-	uint64_t root_device_index = current_system_partition.offset;
+	uint32_t root_device_index = current_system_partition.partition_info->id;
+	pr_error("%s index: %d", root_part_name, root_device_index);
 
 	if (!cmdline || !param) {
 		return -1;
 	}
 
-	return tegrabl_snprintf(cmdline, len, "%s=/dev/mmcblk0p%lu ro rootwait rootfstype=ext4 ", param, root_device_index);
+	return tegrabl_snprintf(cmdline, len, "%s=/dev/mmcblk0p%d ro rootwait rootfstype=ext4 ", param, root_device_index);
 }
 
 static struct tegrabl_linuxboot_param extra_params[] = {
