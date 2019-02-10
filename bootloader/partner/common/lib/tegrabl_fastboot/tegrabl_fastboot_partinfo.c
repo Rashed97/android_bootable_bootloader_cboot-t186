@@ -20,13 +20,23 @@
 
 const struct tegrabl_fastboot_partition_info
 	fastboot_partition_map_table[] = {
+#ifdef CONFIG_SANE_PARTITIONS
+	{ "recovery", "recovery_a", "recovery_b"},
+#else
 	{ "recovery", "SOS_a", "SOS_b"},
+#endif
 	{ "boot", "kernel_a", "kernel_b"},
 	{ "dtb", "kernel-dtb_a", "kernel-dtb_b"},
 	{ "dtbo", "kernel-dtbo_a", "kernel-dtbo_b"},
+#ifdef CONFIG_SANE_PARTITIONS
+	{ "system", "system_a", "system_b"},
+	{ "cache", "cache", NULL},
+	{ "userdata", "userdata", NULL},
+#else
 	{ "system", "APP_a", "APP_b"},
 	{ "cache", "CAC", NULL},
 	{ "userdata", "UDA", NULL},
+#endif
 	{ "vendor", "vendor_a", "vendor_b"},
 	{ "bmp", "BMP_a", "BMP_b"},
 	{ "rpb", "RPB", NULL},

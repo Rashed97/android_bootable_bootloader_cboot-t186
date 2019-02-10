@@ -493,7 +493,11 @@ static int add_vbmeta_info(char *cmdline, int len, char *param, void *priv)
 }
 #endif
 
+#ifdef CONFIG_SANE_PARTITIONS
+#define ROOTFS_PART_NAME "system"
+#else
 #define ROOTFS_PART_NAME "APP"
+#endif
 static int add_rootfs_info(char *cmdline, int len, char *param, void *priv)
 {
 	struct tegrabl_partition current_system_partition = {0};
