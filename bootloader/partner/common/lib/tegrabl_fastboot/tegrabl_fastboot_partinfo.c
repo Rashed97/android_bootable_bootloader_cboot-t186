@@ -64,6 +64,7 @@ const char *fastboot_var_list[] = {
 	"secure",
 	"unlocked",
 	"current-slot",
+	"slot-count",
 	"slot-suffixes",
 };
 
