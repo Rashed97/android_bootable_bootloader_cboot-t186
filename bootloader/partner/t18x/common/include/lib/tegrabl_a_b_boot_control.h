@@ -133,7 +133,7 @@ struct boot_slot_info {
 /**
  * @brief Slot Meta Data (SMD) structure
  *
- * @param magic - the majic number for idetification
+ * @param magic - the magic number for identification
  * @param version - version number of data structure
  * @param num_slots - the number of slot info present in this data structure
  * @param slot_info[] - details of all slot info

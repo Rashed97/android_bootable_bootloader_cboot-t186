@@ -22,7 +22,7 @@ extern uint32_t size_a_b_slot_var_list;
  *        registered in each binaries with binary specific implementation
  *
  * @param get_current_slot API to get current boot slot
- * @param get_slot_numm API to get total slot number
+ * @param get_slot_num API to get total slot number
  * @param get_slot_suffix API to get slot suffix
  * @param is_slot_successful API to get the successful flag of given slot
  * @param is_slot_unbootable API to check if given slot is unbootable
