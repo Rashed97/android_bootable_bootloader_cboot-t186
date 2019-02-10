@@ -503,6 +503,8 @@ static int add_rootfs_info(char *cmdline, int len, char *param, void *priv)
 	struct tegrabl_partition current_system_partition = {0};
 	char *root_part_name;
 	char *slot_suffix;
+	enum tegrabl_binary_type bin_type;
+	int ret = -1;
 
 	slot_suffix = "";
 #if defined(CONFIG_ENABLE_A_B_SLOT)
@@ -523,8 +525,16 @@ static int add_rootfs_info(char *cmdline, int len, char *param, void *priv)
 		return -1;
 	}
 
-	// TODO: Read and automatically set rootfstype rather than hardcode to ext4
-	return tegrabl_snprintf(cmdline, len, "%s=/dev/mmcblk0p%d ro rootwait rootfstype=ext4 ", param, root_device_index);
+	bin_type = tegrabl_get_kernel_type();
+	if (bin_type != TEGRABL_BINARY_RECOVERY_KERNEL) {
+		// TODO: Read and automatically set rootfstype rather than hardcode to ext4
+		ret = tegrabl_snprintf(cmdline, len, "%s=/dev/mmcblk0p%d ro rootwait rootfstype=ext4 ", param, root_device_index);
+	} else {
+		// Don't set root= in recovery as recovery ramdisk lives in boot.img ramdisk
+		ret = tegrabl_snprintf(cmdline, len, " ");
+	}
+
+	return ret;
 }
 
 static struct tegrabl_linuxboot_param extra_params[] = {
