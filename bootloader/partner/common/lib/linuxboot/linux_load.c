@@ -277,7 +277,7 @@ load_dtb:
 		pr_error("Error %u loading kernel-dtbo\n", err);
 		goto fail;
 	}
-	pr_info("Lernel DTBO @ %p\n", kernel_dtbo);
+	pr_info("Kernel DTBO @ %p\n", kernel_dtbo);
 #endif /* CONFIG_ENABLE_DTB_OVERLAY */
 #else
 	*kernel_dtb = (void *)((uintptr_t)DTB_LOAD_ADDRESS);

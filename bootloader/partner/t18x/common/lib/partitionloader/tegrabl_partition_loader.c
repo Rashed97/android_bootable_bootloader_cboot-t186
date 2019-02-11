@@ -43,7 +43,7 @@ struct tegrabl_binary_info
 			.load_address = (void *) BOOT_IMAGE_LOAD_ADDRESS
 	},
 	[TEGRABL_BINARY_NCT] = {
-			.load_address = (void *)NCT_PART_LOAD_ADDRESS
+			.load_address = (void *) NCT_PART_LOAD_ADDRESS
 	}
 };
 
@@ -318,8 +318,12 @@ tegrabl_error_t tegrabl_load_binary_copy(
 			binary.partition_name, binary.load_address);
 
 	/* Set load address from retrieved info.*/
-	if (load_address)
+	if (load_address && binary.load_address) {
 		*load_address = (void *)binary.load_address;
+	} else if (!binary.load_address) {
+		// If binary.load_address is empty, use the passed load_address
+		binary.load_address = load_address;
+	}
 
 	/* Get partition info */
 	err = tegrabl_partition_open(binary.partition_name,
