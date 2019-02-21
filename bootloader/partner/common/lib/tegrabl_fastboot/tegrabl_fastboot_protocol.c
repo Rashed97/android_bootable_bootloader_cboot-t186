@@ -53,6 +53,7 @@
 #include <linux_load.h>
 #include <tegrabl_bootloader_update.h>
 #include <tegrabl_a_b_partition_naming.h>
+#include <tegrabl_a_b_boot_control.h>
 #include <menu.h>
 
 #define MAX_SERIALNO_LEN 32
@@ -195,8 +196,20 @@ static void cmd_set_active_slot(const char *arg, void *data, uint32_t size)
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 	(void)size;
 	(void)data;
+	char *arg_full;
 
-	err = tegrabl_set_active_slot(arg);
+	arg_full = "";
+	if (!strcmp(arg, BOOT_CHAIN_SUFFIX_A) || !strcmp(arg, BOOT_CHAIN_SUFFIX_B)) {
+		strcpy(arg_full, arg);
+	} else {
+		char *arg_temp;
+		arg_temp = "";
+		strcpy(arg_temp, "_");
+		strcat(arg_temp, arg);
+		strcpy(arg_full, arg_temp);
+	}
+
+	err = tegrabl_set_active_slot(arg_full);
 	if (err != TEGRABL_NO_ERROR) {
 		fastboot_fail("Failed to set slot active");
 		return;
