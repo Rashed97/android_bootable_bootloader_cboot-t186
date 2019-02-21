@@ -614,7 +614,7 @@ static tegrabl_error_t load_smd_bin_copy(enum smd_bin_copy bin_copy)
 	uint32_t crc32;
 	uint32_t smd_len = sizeof(struct slot_meta_data);
 
-	smd_part = (bin_copy == SMD_COPY_PRIMARY) ? "SMD" : "SMD_b";
+	smd_part = (bin_copy == SMD_COPY_PRIMARY) ? "SMD_a" : "SMD_b";
 	error = tegrabl_partition_open(smd_part, &part);
 	if (error != TEGRABL_NO_ERROR) {
 		TEGRABL_SET_HIGHEST_MODULE(error);
@@ -700,7 +700,7 @@ static tegrabl_error_t flush_smd_bin_copy(void *smd, enum smd_bin_copy bin_copy)
 	struct tegrabl_partition part;
 	char *smd_part;
 
-	smd_part = (bin_copy == SMD_COPY_PRIMARY) ? "SMD" : "SMD_b";
+	smd_part = (bin_copy == SMD_COPY_PRIMARY) ? "SMD_a" : "SMD_b";
 
 	/* Write SMD back to storage */
 	error = tegrabl_partition_open(smd_part, &part);
