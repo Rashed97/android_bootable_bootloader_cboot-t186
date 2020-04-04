@@ -179,9 +179,9 @@ static inline uint32_t total_boot_pages(union tegrabl_bootimg_header *hdr)
 	uint32_t kernel_pages, ramdisk_pages, second_pages, header_pages;
 
 	header_pages = 1;
-	kernel_pages = DIV_ROUND_UP(hdr->kernelsize, hdr->pagesize);
-	ramdisk_pages = DIV_ROUND_UP(hdr->ramdisksize, hdr->pagesize);
-	second_pages = DIV_ROUND_UP(hdr->secondsize, hdr->pagesize);
+	kernel_pages = DIV_ROUND_UP(hdr->kernel_size, hdr->page_size);
+	ramdisk_pages = DIV_ROUND_UP(hdr->ramdisk_size, hdr->page_size);
+	second_pages = DIV_ROUND_UP(hdr->second_size, hdr->page_size);
 
 	return header_pages + kernel_pages + ramdisk_pages + second_pages;
 }
@@ -378,7 +378,7 @@ status_t verified_boot_get_boot_state(union tegrabl_bootimg_header *hdr,
 	} else {
 		/* Get boot.img boot state */
 		/* Size of boot image including signature section */
-		boot_size = total_boot_pages(hdr) * hdr->pagesize;
+		boot_size = total_boot_pages(hdr) * hdr->page_size;
 		boot_sig_section = (uint8_t *)hdr + boot_size;
 		pr_info("Verifying boot: boot.img\n");
 		ret = verify_image((uintptr_t)hdr, boot_size,

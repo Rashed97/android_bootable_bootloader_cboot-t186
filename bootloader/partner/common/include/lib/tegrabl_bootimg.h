@@ -55,18 +55,21 @@ union tegrabl_bootimg_header {
 	uint32_t word[ANDROID_HEADER_SIZE / sizeof(uint32_t)];
 	struct {
 		uint8_t  magic[BOOT_MAGIC_SIZE];
-		uint32_t kernelsize;
-		uint32_t kerneladdr;
+		uint32_t kernel_size;
+		uint32_t kernel_addr;
 
-		uint32_t ramdisksize;
-		uint32_t ramdiskaddr;
+		uint32_t ramdisk_size;
+		uint32_t ramdisk_addr;
 
-		uint32_t secondsize;
-		uint32_t secondaddr;
+		uint32_t second_size;
+		uint32_t second_addr;
 
-		uint32_t tagsaddr;
-		uint32_t pagesize;
-		uint32_t unused[2];
+		uint32_t tags_addr;
+		uint32_t page_size;
+
+		uint32_t header_version;
+
+		uint32_t os_version;
 
 		uint8_t  name[BOOT_NAME_SIZE];
 		uint8_t  cmdline[BOOT_ARGS_SIZE];

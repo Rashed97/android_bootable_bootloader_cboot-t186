@@ -108,7 +108,7 @@ static tegrabl_error_t extract_kernel(union tegrabl_bootimg_header *hdr,
 	decompressor *decomp = NULL;
 	uint32_t decomp_size = 0; /* kernel size after decompressing */
 
-	kernel_offset = hdr->pagesize;
+	kernel_offset = hdr->page_size;
 
 	err = validate_kernel(hdr, &hdr_crc);
 	if (err != TEGRABL_NO_ERROR) {
@@ -117,7 +117,7 @@ static tegrabl_error_t extract_kernel(union tegrabl_bootimg_header *hdr,
 	}
 
 	if (hdr_crc)
-		kernel_load = (char *)0x80000000 + hdr->kerneladdr;
+		kernel_load = (char *)0x80000000 + hdr->kernel_addr;
 	else
 		kernel_load = (char *)LINUX_LOAD_ADDRESS;
 
@@ -126,15 +126,15 @@ static tegrabl_error_t extract_kernel(union tegrabl_bootimg_header *hdr,
 
 	if (!is_compressed) {
 		pr_info("Copying kernel image (%u bytes) from %p to %p ... ",
-				hdr->kernelsize, (char *)hdr + kernel_offset, kernel_load);
-		memmove(kernel_load, (char *)hdr + kernel_offset, hdr->kernelsize);
+				hdr->kernel_size, (char *)hdr + kernel_offset, kernel_load);
+		memmove(kernel_load, (char *)hdr + kernel_offset, hdr->kernel_size);
 	} else {
 		pr_info("Decompressing kernel image (%u bytes) from %p to %p ... ",
-				hdr->kernelsize, (char *)hdr + kernel_offset, kernel_load);
+				hdr->kernel_size, (char *)hdr + kernel_offset, kernel_load);
 
 		decomp_size = MAX_KERNEL_IMAGE_SIZE;
 		err = do_decompress(decomp, (uint8_t *)hdr + kernel_offset,
-							hdr->kernelsize, kernel_load, &decomp_size);
+							hdr->kernel_size, kernel_load, &decomp_size);
 		if (err != TEGRABL_NO_ERROR) {
 			pr_error("\nError %d decompress kernel\n", err);
 			return err;
@@ -153,12 +153,12 @@ static tegrabl_error_t extract_ramdisk(union tegrabl_bootimg_header *hdr)
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 	uint64_t ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in boot.img */
 
-	ramdisk_offset = ROUND_UP_POW2(hdr->pagesize + hdr->kernelsize,
-								   hdr->pagesize);
+	ramdisk_offset = ROUND_UP_POW2(hdr->page_size + hdr->kernel_size,
+								   hdr->page_size);
 
 	ramdisk_offset = (uintptr_t)hdr + ramdisk_offset;
 	ramdisk_load = RAMDISK_ADDRESS;
-	ramdisk_size = hdr->ramdisksize;
+	ramdisk_size = hdr->ramdisk_size;
 	if (ramdisk_offset != ramdisk_load) {
 		pr_info("Move ramdisk (len: %"PRIu64") from 0x%"PRIx64" to 0x%"PRIx64
 				"\n", ramdisk_size, ramdisk_offset, ramdisk_load);
