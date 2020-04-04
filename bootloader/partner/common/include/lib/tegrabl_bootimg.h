@@ -50,7 +50,13 @@ extern "C"
  * @param crc_ramdisk Holds the store RAM disk checksum.
  */
 
+#if CONFIG_BOOTIMG_HEADER_VERSION == 2
+typedef struct boot_img_hdr_v2 tegrabl_bootimg_header;
+#elif CONFIG_BOOTIMG_HEADER_VERSION == 1
+typedef struct boot_img_hdr_v1 tegrabl_bootimg_header;
+#else // CONFIG_BOOTIMG_HEADER_VERSION=0 will fall back to this
 typedef struct boot_img_hdr_v0 tegrabl_bootimg_header;
+#endif
 
 #define CRC32_SIZE  (sizeof(uint32_t))
 
