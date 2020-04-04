@@ -51,8 +51,6 @@ extern "C"
  */
 
 union tegrabl_bootimg_header {
-	/* this word is added to deal with aliasing rules */
-	uint32_t word[ANDROID_HEADER_SIZE / sizeof(uint32_t)];
 	struct {
 		uint8_t  magic[BOOT_MAGIC_SIZE];
 		uint32_t kernel_size;

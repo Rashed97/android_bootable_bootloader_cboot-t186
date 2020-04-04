@@ -60,7 +60,6 @@ static tegrabl_error_t validate_kernel(union tegrabl_bootimg_header *hdr,
 									   uint32_t *hdr_crc)
 {
 	uint32_t known_crc = 0;
-	uint32_t calculated_crc = 0;
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 
 	pr_info("Checking boot.img header magic ... ");
@@ -71,21 +70,6 @@ static tegrabl_error_t validate_kernel(union tegrabl_bootimg_header *hdr,
 		goto fail;
 	}
 	pr_info("[OK]\n");
-
-	/* Check header CRC if present */
-	known_crc =
-		hdr->word[(ANDROID_HEADER_SIZE - CRC32_SIZE) / sizeof(uint32_t)];
-	if (known_crc) {
-		pr_info("Checking boot.img header crc ... ");
-		calculated_crc = tegrabl_utils_crc32(0, (char *)hdr,
-											 ANDROID_HEADER_SIZE);
-		if (calculated_crc != known_crc) {
-			pr_error("Invalid boot.img @ %p (header crc mismatch)\n", hdr);
-			err = TEGRABL_ERROR(TEGRABL_ERR_VERIFY_FAILED, 0);
-			goto fail;
-		}
-		pr_info("[OK]\n");
-	}
 
 	pr_info("Valid boot.img @ %p\n", hdr);
 
