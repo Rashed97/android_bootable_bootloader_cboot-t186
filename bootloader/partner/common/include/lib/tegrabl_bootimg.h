@@ -50,32 +50,30 @@ extern "C"
  * @param crc_ramdisk Holds the store RAM disk checksum.
  */
 
-union tegrabl_bootimg_header {
-	struct {
-		uint8_t  magic[BOOT_MAGIC_SIZE];
-		uint32_t kernel_size;
-		uint32_t kernel_addr;
+struct tegrabl_bootimg_header {
+	uint8_t  magic[BOOT_MAGIC_SIZE];
+	uint32_t kernel_size;
+	uint32_t kernel_addr;
 
-		uint32_t ramdisk_size;
-		uint32_t ramdisk_addr;
+	uint32_t ramdisk_size;
+	uint32_t ramdisk_addr;
 
-		uint32_t second_size;
-		uint32_t second_addr;
+	uint32_t second_size;
+	uint32_t second_addr;
 
-		uint32_t tags_addr;
-		uint32_t page_size;
+	uint32_t tags_addr;
+	uint32_t page_size;
 
-		uint32_t header_version;
+	uint32_t header_version;
 
-		uint32_t os_version;
+	uint32_t os_version;
 
-		uint8_t  name[BOOT_NAME_SIZE];
-		uint8_t  cmdline[BOOT_ARGS_SIZE];
+	uint8_t name[BOOT_NAME_SIZE];
+	uint8_t cmdline[BOOT_ARGS_SIZE];
 
-		uint32_t id[8];
+	uint32_t id[8];
 
-		uint8_t extra_cmdline[BOOT_EXTRA_ARGS_SIZE];
-	};
+	uint8_t extra_cmdline[BOOT_EXTRA_ARGS_SIZE];
 };
 
 #define CRC32_SIZE  (sizeof(uint32_t))

@@ -187,7 +187,7 @@ static tegrabl_error_t read_kernel_partition(
 {
 	tegrabl_error_t err;
 	uint32_t remain_size;
-	union tegrabl_bootimg_header *hdr;
+	struct tegrabl_bootimg_header *hdr;
 
 	/* read head pages equal to android kernel header size */
 	err = tegrabl_partition_read(partition, load_address, ANDROID_HEADER_SIZE);
@@ -197,7 +197,7 @@ static tegrabl_error_t read_kernel_partition(
 		return err;
 	}
 
-	hdr = (union tegrabl_bootimg_header *)load_address;
+	hdr = (struct tegrabl_bootimg_header *)load_address;
 	if (!strncmp((char *)hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
 		/* for android kernel, read remaining kernel size */
 		/* align kernel/ramdisk/secondimage/signature size with page size */
