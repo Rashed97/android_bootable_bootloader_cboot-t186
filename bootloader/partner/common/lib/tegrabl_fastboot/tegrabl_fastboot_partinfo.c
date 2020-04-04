@@ -35,6 +35,7 @@ const struct tegrabl_fastboot_partition_info
 	{ "dtbo", "kernel-dtbo_a", "kernel-dtbo_b"},
 #endif
 	{ "vendor", "vendor_a", "vendor_b"},
+	{ "vendor_boot", "vendor_boot_a", "vendor_boot_b"},
 	{ "bmp", "BMP_a", "BMP_b"},
 #else
 #ifdef CONFIG_SANE_PARTITIONS
@@ -51,6 +52,7 @@ const struct tegrabl_fastboot_partition_info
 	{ "dtbo", "kernel-dtbo", NULL},
 #endif
 	{ "vendor", "vendor", NULL},
+	{ "vendor_boot", "vendor_boot", NULL},
 	{ "bmp", "BMP", NULL},
 #endif
 #ifdef CONFIG_SANE_PARTITIONS

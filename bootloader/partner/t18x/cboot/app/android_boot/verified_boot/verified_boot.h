@@ -60,6 +60,7 @@ struct root_of_trust {
  *		  state
  *
  * @param hdr boot.img header address
+ * @param vndhdr vendor_boot.img header address
  * @param kernel_dtb kernel-dtb load address
  * @param kernel_dtbo kernel-dtbo load address
  * @param bs boot state value returned
@@ -76,6 +77,7 @@ struct root_of_trust {
  * @return NO_ERROR if boot state is conclusively determined, else apt error
  */
 status_t verified_boot_get_boot_state(tegrabl_bootimg_header *hdr,
+									  tegrabl_vendor_bootimg_header *vndhdr,
 									  void *kernel_dtb,
 									  void *kernel_dtbo,
 									  enum boot_state *bs,
@@ -113,6 +115,7 @@ uint32_t smc_call(uint32_t arg0, uintptr_t arg1, uintptr_t arg2);
  *        signature, pass params to tlk, show verified boot UI
  *
  * @param hdr boot.img header address
+ * @param vndhdr vendor_boot.img header address
  * @param kernel_dtb kernel-dtb address
  * @param kernel_dtbo kernel-dtbo address
  *
@@ -120,6 +123,7 @@ uint32_t smc_call(uint32_t arg0, uintptr_t arg1, uintptr_t arg2);
  */
 
 tegrabl_error_t verify_boot(tegrabl_bootimg_header *hdr,
+							tegrabl_vendor_bootimg_header *vndhdr,
 							void *kernel_dtb, void *kernel_dtbo);
 
 #endif

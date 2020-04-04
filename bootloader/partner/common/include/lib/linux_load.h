@@ -23,8 +23,9 @@ struct tegrabl_kernel_bin {
 };
 
 struct tegrabl_kernel_load_callbacks {
-	tegrabl_error_t (*verify_boot)(tegrabl_bootimg_header *, void *,
-								   void *);
+	tegrabl_error_t (*verify_boot)(tegrabl_bootimg_header *,
+								tegrabl_vendor_bootimg_header *,
+								void *, void *);
 };
 
 /**
@@ -44,5 +45,12 @@ tegrabl_error_t tegrabl_load_kernel_and_dtb(
 		void **kernel_dtb,
 		struct tegrabl_kernel_load_callbacks *callbacks,
 		void *data);
+
+/**
+ * @brief Stores values pulled from the vendor_boot.img header
+ *
+ * @param vndhdr vendor_boot.img header address
+ */
+void tegrabl_store_vendor_bootimg_values(tegrabl_vendor_bootimg_header *vndhdr);
 
 #endif /* INCLUDED_TEGRABL_LINUX_LOADER_H */

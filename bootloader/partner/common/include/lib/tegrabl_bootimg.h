@@ -50,13 +50,30 @@ extern "C"
  * @param crc_ramdisk Holds the store RAM disk checksum.
  */
 
-#if CONFIG_BOOTIMG_HEADER_VERSION == 2
+#if CONFIG_BOOTIMG_HEADER_VERSION == 3
+typedef struct boot_img_hdr_v3 tegrabl_bootimg_header;
+#elif CONFIG_BOOTIMG_HEADER_VERSION == 2
 typedef struct boot_img_hdr_v2 tegrabl_bootimg_header;
 #elif CONFIG_BOOTIMG_HEADER_VERSION == 1
 typedef struct boot_img_hdr_v1 tegrabl_bootimg_header;
 #else // CONFIG_BOOTIMG_HEADER_VERSION=0 will fall back to this
 typedef struct boot_img_hdr_v0 tegrabl_bootimg_header;
 #endif
+
+#if CONFIG_BOOTIMG_HEADER_VERSION == 3
+// Set the vendor bootimg struct only if header version == 3
+// otherwise fall back to bootimg structs
+typedef struct vendor_boot_img_hdr_v3 tegrabl_vendor_bootimg_header;
+#elif CONFIG_BOOTIMG_HEADER_VERSION == 2
+typedef struct boot_img_hdr_v2 tegrabl_vendor_bootimg_header;
+#elif CONFIG_BOOTIMG_HEADER_VERSION == 1
+typedef struct boot_img_hdr_v1 tegrabl_vendor_bootimg_header;
+#else // CONFIG_BOOTIMG_HEADER_VERSION=0 will fall back to this
+typedef struct boot_img_hdr_v0 tegrabl_vendor_bootimg_header;
+#endif
+
+// Set this to the default 4096 page size, override in linux_load if different
+extern uint32_t bootimg_page_size;
 
 #define CRC32_SIZE  (sizeof(uint32_t))
 

@@ -47,7 +47,8 @@ enum tegrabl_binary_type {
 	TEGRABL_BINARY_RECOVERY_KERNEL = 25,	/* 0x19 */
 	TEGRABL_BINARY_NCT = 26,		/* 0x1a */
 	TEGRABL_BINARY_KERNEL_DTBO = 27,	/* 0x1b Kernel DTB overlay */
-	TEGRABL_BINARY_MAX = 28				/* 0x1c */
+	TEGRABL_BINARY_KERNEL_VENDOR = 28,	/* 0x1c vendor_boot.img */
+	TEGRABL_BINARY_MAX = 29			/* 0x1d */
 };
 
 /**

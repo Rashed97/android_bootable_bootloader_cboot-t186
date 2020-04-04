@@ -55,8 +55,8 @@ char *tegrabl_get_bootimg_cmdline(void)
 	return bootimg_cmdline;
 }
 
-/* Sanity checks the kernel image extracted from Android boot image */
-static tegrabl_error_t validate_kernel(tegrabl_bootimg_header *hdr,
+/* Sanity checks the Android boot image */
+static tegrabl_error_t validate_boot_image(tegrabl_bootimg_header *hdr,
 									   uint32_t *hdr_crc)
 {
 	uint32_t known_crc = 0;
@@ -78,10 +78,30 @@ fail:
 	return err;
 }
 
+/* Sanity checks the Android vendor_boot image */
+static tegrabl_error_t validate_vendor_boot_image(tegrabl_vendor_bootimg_header *vndhdr)
+{
+	tegrabl_error_t err = TEGRABL_NO_ERROR;
+
+	pr_info("Checking _vendorboot.img header magic ... ");
+	/* Check header magic */
+	if (memcmp(vndhdr->magic, VENDOR_BOOT_MAGIC, VENDOR_BOOT_MAGIC_SIZE)) {
+		pr_error("Invalid vendor_boot.img @ %p (header magic mismatch)\n", vndhdr);
+		err = TEGRABL_ERROR(TEGRABL_ERR_VERIFY_FAILED, 0);
+		goto fail;
+	}
+	pr_info("[OK]\n");
+	pr_info("Valid vendor_boot.img @ %p\n", vndhdr);
+
+fail:
+	return err;
+}
+
 /* Extract kernel from an Android boot image, and return the address where it
  * is installed in memory
  */
 static tegrabl_error_t extract_kernel(tegrabl_bootimg_header *hdr,
+								   tegrabl_vendor_bootimg_header *vndhdr,
 								   void **kernel_entry_point)
 {
 	void *kernel_load = NULL;
@@ -92,16 +112,16 @@ static tegrabl_error_t extract_kernel(tegrabl_bootimg_header *hdr,
 	decompressor *decomp = NULL;
 	uint32_t decomp_size = 0; /* kernel size after decompressing */
 
-	kernel_offset = hdr->page_size;
+	kernel_offset = vndhdr->page_size;
 
-	err = validate_kernel(hdr, &hdr_crc);
+	err = validate_boot_image(hdr, &hdr_crc);
 	if (err != TEGRABL_NO_ERROR) {
 		pr_error("Error %u failed to validate kernel\n", err);
 		return err;
 	}
 
 	if (hdr_crc)
-		kernel_load = (char *)0x80000000 + hdr->kernel_addr;
+		kernel_load = (char *)0x80000000 + vndhdr->kernel_addr;
 	else
 		kernel_load = (char *)LINUX_LOAD_ADDRESS;
 
@@ -132,13 +152,14 @@ static tegrabl_error_t extract_kernel(tegrabl_bootimg_header *hdr,
 	return TEGRABL_NO_ERROR;
 }
 
-static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr)
+static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
+								   tegrabl_vendor_bootimg_header *vndhdr)
 {
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 	uint64_t ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in boot.img */
 
-	ramdisk_offset = ROUND_UP_POW2(hdr->page_size + hdr->kernel_size,
-								   hdr->page_size);
+	ramdisk_offset = ROUND_UP_POW2(vndhdr->page_size + hdr->kernel_size,
+								   vndhdr->page_size);
 
 	ramdisk_offset = (uintptr_t)hdr + ramdisk_offset;
 	ramdisk_load = RAMDISK_ADDRESS;
@@ -150,6 +171,7 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr)
 				(void *)((uintptr_t)ramdisk_offset), ramdisk_size);
 	}
 	bootimg_cmdline = (char *)hdr->cmdline;
+	strcpy(bootimg_cmdline, (char *)vndhdr->cmdline);
 	pr_info("Loaded cmdline from bootimage: %s\n", bootimg_cmdline);
 
 	return err;
@@ -196,6 +218,13 @@ fail:
 }
 #endif /* end of CONFIG_DT_SUPPORT */
 
+void tegrabl_store_vendor_bootimg_values(tegrabl_vendor_bootimg_header *vndhdr)
+{
+	bootimg_page_size = vndhdr->page_size;
+	pr_info("Kernel page size set to %d\n", bootimg_page_size);
+	return;
+}
+
 tegrabl_error_t tegrabl_load_kernel_and_dtb(
 			struct tegrabl_kernel_bin *kernel,
 			void **kernel_entry_point,
@@ -206,6 +235,7 @@ tegrabl_error_t tegrabl_load_kernel_and_dtb(
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 	void *kernel_dtbo = NULL;
 	tegrabl_bootimg_header *hdr = (void *)((uintptr_t)0xDEADDEA0);
+	tegrabl_vendor_bootimg_header *vndhdr = (void *)((uintptr_t)0xDEADDEA0);
 
 	if (!kernel_entry_point || !kernel_dtb) {
 		err = TEGRABL_ERROR(TEGRABL_ERR_INVALID, 0);
@@ -220,18 +250,37 @@ tegrabl_error_t tegrabl_load_kernel_and_dtb(
 			goto fail;
 		}
 		hdr = data;
+		// TODO: Add handling for vendor_boot.img here
 		goto load_dtb;
 	}
 
-	pr_info("Loading kernel/boot.img from storage ...\n");
+	pr_info("Loading kernel/boot.img/vendor_boot.img from storage ...\n");
 #if !defined(CONFIG_BACKDOOR_LOAD)
-	err = tegrabl_load_binary(kernel->bin_type, (void **)&hdr, NULL);
+#if CONFIG_BOOTIMG_HEADER_VERSION >= 3
+	/* vendor_boot needs to be loaded before boot so we can use the values from it's
+	   header to load the kernel and ramdisk from boot. */
+	err = tegrabl_load_binary(TEGRABL_BINARY_KERNEL_VENDOR, (void **)vndhdr, NULL);
 	if (err != TEGRABL_NO_ERROR) {
-		pr_error("Kernel loading failed\n");
+		pr_error("vendor_boot.img loading failed\n");
 		goto fail;
 	}
+	/* Store values from the vendor_boot image header in global variables
+	   to allow other functions to read them */
+	tegrabl_store_vendor_bootimg_values(vndhdr);
+#endif /* CONFIG_BOOTIMG_HEADER_VERSION */
+	err = tegrabl_load_binary(kernel->bin_type, (void **)&hdr, NULL);
+	if (err != TEGRABL_NO_ERROR) {
+		pr_error("boot.img loading failed\n");
+		goto fail;
+	}
+#if CONFIG_BOOTIMG_HEADER_VERSION < 3
+	/* When vendor_boot doesn't exist, set vndhdr equal to hdr after normal
+	   boot.img has already loaded. */
+	vndhdr = hdr;
+#endif /* CONFIG_BOOTIMG_HEADER_VERSION */
 #else
 	hdr = (void *)((uintptr_t)BOOT_IMAGE_LOAD_ADDRESS);
+	// TODO: Add handling for vendor_boot.img here
 #endif
 
 load_dtb:
@@ -273,15 +322,15 @@ load_dtb:
 	pr_info("Kernel DTB @ %p\n", *kernel_dtb);
 
 	if (callbacks != NULL && callbacks->verify_boot != NULL)
-		callbacks->verify_boot(hdr, *kernel_dtb, kernel_dtbo);
+		callbacks->verify_boot(hdr, vndhdr, *kernel_dtb, kernel_dtbo);
 
-	err = extract_kernel(hdr, kernel_entry_point);
+	err = extract_kernel(hdr, vndhdr, kernel_entry_point);
 	if (err != TEGRABL_NO_ERROR) {
 		pr_error("Error %u loading the kernel\n", err);
 		goto fail;
 	}
 
-	err = extract_ramdisk(hdr);
+	err = extract_ramdisk(hdr, vndhdr);
 	if (err != TEGRABL_NO_ERROR) {
 		pr_error("Error %u loading the ramdisk\n", err);
 		goto fail;

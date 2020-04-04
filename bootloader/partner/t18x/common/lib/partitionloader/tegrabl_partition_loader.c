@@ -31,6 +31,9 @@
 /* boot.img signature size for verify_boot */
 #define BOOT_IMG_SIG_SIZE (4 * 1024)
 
+// Set this to the default 4096 page size, override in linux_load if different
+uint32_t bootimg_page_size = 4096;
+
 struct tegrabl_binary_info
 	binary_info_table[TEGRABL_BINARY_MAX] = {
 	[TEGRABL_BINARY_KERNEL] = {
@@ -64,6 +67,7 @@ static char *tegrabl_get_partition_name(enum tegrabl_binary_type bin_type,
 		[TEGRABL_BINARY_KERNEL_DTBO] = {"kernel-dtbo"},
 		[TEGRABL_BINARY_RECOVERY_KERNEL] = {"SOS"},
 #endif
+		[TEGRABL_BINARY_KERNEL_VENDOR] = {"vendor_boot"},
 		[TEGRABL_BINARY_NCT] = {"NCT"}
 	};
 
@@ -100,6 +104,7 @@ static tegrabl_error_t a_b_get_bin_copy(enum tegrabl_binary_type bin_type,
 	case TEGRABL_BINARY_KERNEL:
 	case TEGRABL_BINARY_KERNEL_DTB:
 	case TEGRABL_BINARY_KERNEL_DTBO:
+	case TEGRABL_BINARY_KERNEL_VENDOR:
 		/* TODO: add a bin_type that supports a/b */
 		break;
 
@@ -187,6 +192,7 @@ static tegrabl_error_t read_kernel_partition(
 {
 	tegrabl_error_t err;
 	uint32_t remain_size;
+	uint32_t page_size;
 	tegrabl_bootimg_header *hdr;
 
 	/* read head pages equal to android kernel header size */
@@ -196,15 +202,24 @@ static tegrabl_error_t read_kernel_partition(
 		TEGRABL_SET_HIGHEST_MODULE(err);
 		return err;
 	}
-
 	hdr = (tegrabl_bootimg_header *)load_address;
+
+#if CONFIG_BOOTIMG_HEADER_VERSION >= 3
+	// Only use dynamically loaded bootimg_page_size if we have vendor_boot.img
+	page_size = bootimg_page_size;
+#else
+	page_size = hdr->page_size;
+#endif
+
 	if (!strncmp((char *)hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
 		/* for android kernel, read remaining kernel size */
 		/* align kernel/ramdisk/secondimage/signature size with page size */
-		remain_size = ALIGN(hdr->kernel_size, hdr->page_size);
-		remain_size += ALIGN(hdr->ramdisk_size, hdr->page_size);
-		remain_size += ALIGN(hdr->second_size, hdr->page_size);
-		remain_size += ALIGN(BOOT_IMG_SIG_SIZE, hdr->page_size);
+		remain_size = ALIGN(hdr->kernel_size, page_size);
+		remain_size += ALIGN(hdr->ramdisk_size, page_size);
+#if CONFIG_BOOTIMG_HEADER_VERSION < 3
+		remain_size += ALIGN(hdr->second_size, page_size);
+#endif
+		remain_size += ALIGN(BOOT_IMG_SIG_SIZE, page_size);
 
 		if (remain_size + ANDROID_HEADER_SIZE > *partition_size) {
 			/*
@@ -213,7 +228,7 @@ static tegrabl_error_t read_kernel_partition(
 			 * than boot.img size
 			 */
 			pr_error("kernel partition size should be at least %dB larger than \
-					 kernel size\n", 4 * hdr->page_size);
+					 kernel size\n", 4 * page_size);
 			err = TEGRABL_ERROR(TEGRABL_ERR_INVALID, 0);
 			return err;
 		}
