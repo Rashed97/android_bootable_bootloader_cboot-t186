@@ -47,7 +47,7 @@ APPEND_VERSION := $(LKROOT)/scripts/add_version_info.py
 
 GLOBAL_INCLUDES := $(BUILDDIR) $(LKROOT)/include $(addsuffix /include,$(LKINC))
 GLOBAL_OPTFLAGS ?= -Os
-GLOBAL_COMPILEFLAGS := -g -fno-builtin -finline -W -Wall -Wno-multichar -Wno-unused-parameter -Wno-unused-function -include $(CONFIGHEADER)
+GLOBAL_COMPILEFLAGS := -g -fno-builtin -finline -W -Wall -Wno-multichar -Wno-unused-parameter -Wno-unused-function -include $(CONFIGHEADER) -fno-stack-protector
 GLOBAL_CFLAGS := --std=gnu99 -Werror-implicit-function-declaration -Wstrict-prototypes
 GLOBAL_CFLAGS += -Werror=strict-prototypes -Werror=unused-label -Werror=int-to-pointer-cast -Werror=address
 GLOBAL_CFLAGS += -Werror=array-bounds -Werror=char-subscripts -Werror=enum-compare
