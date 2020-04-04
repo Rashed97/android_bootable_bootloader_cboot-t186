@@ -56,7 +56,7 @@ char *tegrabl_get_bootimg_cmdline(void)
 }
 
 /* Sanity checks the kernel image extracted from Android boot image */
-static tegrabl_error_t validate_kernel(struct tegrabl_bootimg_header *hdr,
+static tegrabl_error_t validate_kernel(tegrabl_bootimg_header *hdr,
 									   uint32_t *hdr_crc)
 {
 	uint32_t known_crc = 0;
@@ -81,7 +81,7 @@ fail:
 /* Extract kernel from an Android boot image, and return the address where it
  * is installed in memory
  */
-static tegrabl_error_t extract_kernel(struct tegrabl_bootimg_header *hdr,
+static tegrabl_error_t extract_kernel(tegrabl_bootimg_header *hdr,
 								   void **kernel_entry_point)
 {
 	void *kernel_load = NULL;
@@ -132,7 +132,7 @@ static tegrabl_error_t extract_kernel(struct tegrabl_bootimg_header *hdr,
 	return TEGRABL_NO_ERROR;
 }
 
-static tegrabl_error_t extract_ramdisk(struct tegrabl_bootimg_header *hdr)
+static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr)
 {
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 	uint64_t ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in boot.img */
@@ -205,7 +205,7 @@ tegrabl_error_t tegrabl_load_kernel_and_dtb(
 {
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 	void *kernel_dtbo = NULL;
-	struct tegrabl_bootimg_header *hdr = (void *)((uintptr_t)0xDEADDEA0);
+	tegrabl_bootimg_header *hdr = (void *)((uintptr_t)0xDEADDEA0);
 
 	if (!kernel_entry_point || !kernel_dtb) {
 		err = TEGRABL_ERROR(TEGRABL_ERR_INVALID, 0);
