@@ -198,7 +198,7 @@ static tegrabl_error_t read_kernel_partition(
 	}
 
 	hdr = (union tegrabl_bootimg_header *)load_address;
-	if (!strncmp((char *)hdr->magic, ANDROID_MAGIC, ANDROID_MAGIC_SIZE)) {
+	if (!strncmp((char *)hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
 		/* for android kernel, read remaining kernel size */
 		/* align kernel/ramdisk/secondimage/signature size with page size */
 		remain_size = ALIGN(hdr->kernelsize, hdr->pagesize);

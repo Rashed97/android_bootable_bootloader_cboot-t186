@@ -14,15 +14,13 @@
 #include <stdint.h>
 #include <tegrabl_error.h>
 
+#include "android_bootimg.h"
+
 #if defined(__cplusplus)
 extern "C"
 {
 #endif
 
-#define ANDROID_MAGIC "ANDROID!"
-#define ANDROID_MAGIC_SIZE 8
-#define ANDROID_BOOT_NAME_SIZE 16
-#define ANDROID_BOOT_CMDLINE_SIZE 512
 #define ANDROID_HEADER_SIZE 2048
 
 /**
@@ -56,7 +54,7 @@ union tegrabl_bootimg_header {
 	/* this word is added to deal with aliasing rules */
 	uint32_t word[ANDROID_HEADER_SIZE / sizeof(uint32_t)];
 	struct {
-		uint8_t  magic[ANDROID_MAGIC_SIZE];
+		uint8_t  magic[BOOT_MAGIC_SIZE];
 		uint32_t kernelsize;
 		uint32_t kerneladdr;
 
@@ -70,14 +68,12 @@ union tegrabl_bootimg_header {
 		uint32_t pagesize;
 		uint32_t unused[2];
 
-		uint8_t  name[ANDROID_BOOT_NAME_SIZE];
-		uint8_t  cmdline[ANDROID_BOOT_CMDLINE_SIZE];
+		uint8_t  name[BOOT_NAME_SIZE];
+		uint8_t  cmdline[BOOT_ARGS_SIZE];
 
 		uint32_t id[8];
-		uint32_t compressionalgo;
 
-		uint32_t kernelcrc;
-		uint32_t ramdiskcrc;
+		uint8_t extra_cmdline[BOOT_EXTRA_ARGS_SIZE];
 	};
 };
 

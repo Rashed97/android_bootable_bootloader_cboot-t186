@@ -65,7 +65,7 @@ static tegrabl_error_t validate_kernel(union tegrabl_bootimg_header *hdr,
 
 	pr_info("Checking boot.img header magic ... ");
 	/* Check header magic */
-	if (memcmp(hdr->magic, ANDROID_MAGIC, ANDROID_MAGIC_SIZE)) {
+	if (memcmp(hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
 		pr_error("Invalid boot.img @ %p (header magic mismatch)\n", hdr);
 		err = TEGRABL_ERROR(TEGRABL_ERR_VERIFY_FAILED, 0);
 		goto fail;
