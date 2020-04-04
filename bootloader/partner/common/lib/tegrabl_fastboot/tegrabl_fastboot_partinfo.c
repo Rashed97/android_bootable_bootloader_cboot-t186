@@ -20,25 +20,46 @@
 
 const struct tegrabl_fastboot_partition_info
 	fastboot_partition_map_table[] = {
+#ifdef CONFIG_ENABLE_A_B_SLOT
 #ifdef CONFIG_SANE_PARTITIONS
 	{ "recovery", "recovery_a", "recovery_b"},
+	{ "system", "system_a", "system_b"},
+	{ "boot", "boot_a", "boot_b"},
+	{ "dtb", "dtb_a", "dtb_b"},
+	{ "dtbo", "dtbo_a", "dtbo_b"},
 #else
 	{ "recovery", "SOS_a", "SOS_b"},
-#endif
+	{ "system", "APP_a", "APP_b"},
 	{ "boot", "kernel_a", "kernel_b"},
 	{ "dtb", "kernel-dtb_a", "kernel-dtb_b"},
 	{ "dtbo", "kernel-dtbo_a", "kernel-dtbo_b"},
-#ifdef CONFIG_SANE_PARTITIONS
-	{ "system", "system_a", "system_b"},
-	{ "cache", "cache", NULL},
-	{ "userdata", "userdata", NULL},
-#else
-	{ "system", "APP_a", "APP_b"},
-	{ "cache", "CAC", NULL},
-	{ "userdata", "UDA", NULL},
 #endif
 	{ "vendor", "vendor_a", "vendor_b"},
 	{ "bmp", "BMP_a", "BMP_b"},
+#else
+#ifdef CONFIG_SANE_PARTITIONS
+	{ "recovery", "recovery", NULL},
+	{ "system", "system", NULL},
+	{ "boot", "boot", NULL},
+	{ "dtb", "dtb", NULL},
+	{ "dtbo", "dtbo", NULL},
+#else
+	{ "recovery", "SOS", NULL},
+	{ "system", "APP", NULL},
+	{ "boot", "kernel", NULL},
+	{ "dtb", "kernel-dtb", NULL},
+	{ "dtbo", "kernel-dtbo", NULL},
+#endif
+	{ "vendor", "vendor", NULL},
+	{ "bmp", "BMP", NULL},
+#endif
+#ifdef CONFIG_SANE_PARTITIONS
+	{ "cache", "cache", NULL},
+	{ "userdata", "userdata", NULL},
+#else
+	{ "cache", "CAC", NULL},
+	{ "userdata", "UDA", NULL},
+#endif
 	{ "rpb", "RPB", NULL},
 };
 

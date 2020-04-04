@@ -53,10 +53,17 @@ static char *tegrabl_get_partition_name(enum tegrabl_binary_type bin_type,
 {
 	static char partition_names[TEGRABL_BINARY_MAX]
 								[TEGRABL_GPT_MAX_PARTITION_NAME + 1] = {
+#ifdef CONFIG_SANE_PARTITIONS
+		[TEGRABL_BINARY_KERNEL] = {"boot"},
+		[TEGRABL_BINARY_KERNEL_DTB] = {"dtb"},
+		[TEGRABL_BINARY_KERNEL_DTBO] = {"dtbo"},
+		[TEGRABL_BINARY_RECOVERY_KERNEL] = {"recovery"},
+#else
 		[TEGRABL_BINARY_KERNEL] = {"kernel"},
 		[TEGRABL_BINARY_KERNEL_DTB] = {"kernel-dtb"},
 		[TEGRABL_BINARY_KERNEL_DTBO] = {"kernel-dtbo"},
 		[TEGRABL_BINARY_RECOVERY_KERNEL] = {"SOS"},
+#endif
 		[TEGRABL_BINARY_NCT] = {"NCT"}
 	};
 
