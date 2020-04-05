@@ -538,6 +538,29 @@ static int add_rootfs_info(char *cmdline, int len, char *param, void *priv)
 	return ret;
 }
 
+#if defined(CONFIG_USES_DYNAMIC_PARTITIONS)
+static int set_normal_boot_flag(char *cmdline, int len, char *param, void *priv)
+{
+	enum tegrabl_binary_type bin_type;
+	uint32_t boot_mode;
+
+	if (!cmdline || !param) {
+		return -1;
+	}
+
+	bin_type = tegrabl_get_kernel_type();
+	if (bin_type != TEGRABL_BINARY_RECOVERY_KERNEL) {
+		// Set androidboot.force_normal_boot=1 for normal boot
+		boot_mode = 1;
+	} else {
+		// Set androidboot.force_normal_boot=0 for recovery boot
+		boot_mode = 0;
+	}
+
+	return tegrabl_snprintf(cmdline, len, "%s=%d ", param, boot_mode);
+}
+#endif /* CONFIG_USES_DYNAMIC_PARTITIONS */
+
 static struct tegrabl_linuxboot_param extra_params[] = {
 	{ "tegraid", add_tegraid, NULL },
 	{ "tegra_keep_boot_clocks", tegrabl_linuxboot_add_string, NULL},
@@ -558,9 +581,11 @@ static struct tegrabl_linuxboot_param extra_params[] = {
 	{ "androidboot.slot_suffix", add_boot_slot_suffix, NULL },
 	{ "androidboot.ratchetvalues", add_ratchet_values, NULL },
 #endif
-#if defined(CONFIG_ENABLE_SYSTEM_AS_ROOT)
+#if defined(CONFIG_USES_DYNAMIC_PARTITIONS)
+	{ "androidboot.force_normal_boot", set_normal_boot_flag, NULL },
+#elif defined(CONFIG_ENABLE_SYSTEM_AS_ROOT)
 	{ "skip_initramfs", add_boot_recovery_info, NULL },
-#endif	/* CONFIG_ENABLE_SYSTEM_AS_ROOT */
+#endif /* CONFIG_USES_DYNAMIC_PARTITIONS || CONFIG_ENABLE_SYSTEM_AS_ROOT */
 #endif
 	{ "root", add_rootfs_info, NULL },
 	{ "androidboot.serialno", add_serialno, NULL },
