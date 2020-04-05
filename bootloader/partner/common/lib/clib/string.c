@@ -270,6 +270,24 @@ char* strcat(char* dest, const char* src)
 	return save;
 }
 
+char* strncat(char *dest, char const *src, size_t count)
+{
+	char *tmp = dest;
+
+	if (count > 0) {
+		while (*dest)
+			dest++;
+		while ((*dest++ = *src++)) {
+			if (--count == 0) {
+				*dest = '\0';
+				break;
+			}
+		}
+	}
+
+	return tmp;
+}
+
 int strcmp(const char* s1, const char* s2)
 {
 	while (*s1 == *s2++) {
