@@ -170,8 +170,13 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 		memmove((void *)((uintptr_t)ramdisk_load),
 				(void *)((uintptr_t)ramdisk_offset), ramdisk_size);
 	}
+#if CONFIG_BOOTIMG_HEADER_VERSION >= 3
 	strncpy(bootimg_cmdline, (char *)hdr->cmdline, BOOT_ARGS_SIZE + BOOT_EXTRA_ARGS_SIZE);
 	strncat(bootimg_cmdline, (char *)vndhdr->cmdline, VENDOR_BOOT_ARGS_SIZE);
+#else
+	strncpy(bootimg_cmdline, (char *)hdr->cmdline, BOOT_ARGS_SIZE);
+	// TODO: Maybe append hdr->extra_cmdline too?
+#endif
 	pr_info("Loaded cmdline from bootimage: %s\n", bootimg_cmdline);
 
 	return err;
