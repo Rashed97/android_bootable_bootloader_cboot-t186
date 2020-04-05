@@ -30,7 +30,7 @@
 
 static uint64_t ramdisk_load;
 static uint64_t ramdisk_size;
-static char *bootimg_cmdline;
+static char bootimg_cmdline[BOOT_ARGS_SIZE + BOOT_EXTRA_ARGS_SIZE + VENDOR_BOOT_ARGS_SIZE + 1];
 
 /* maximum possible uncompressed kernel image size--60M */
 #define MAX_KERNEL_IMAGE_SIZE (1024 * 1024 * 60)
@@ -170,8 +170,8 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 		memmove((void *)((uintptr_t)ramdisk_load),
 				(void *)((uintptr_t)ramdisk_offset), ramdisk_size);
 	}
-	bootimg_cmdline = (char *)hdr->cmdline;
-	strcpy(bootimg_cmdline, (char *)vndhdr->cmdline);
+	strncpy(bootimg_cmdline, (char *)hdr->cmdline, BOOT_ARGS_SIZE + BOOT_EXTRA_ARGS_SIZE);
+	strncat(bootimg_cmdline, (char *)vndhdr->cmdline, VENDOR_BOOT_ARGS_SIZE);
 	pr_info("Loaded cmdline from bootimage: %s\n", bootimg_cmdline);
 
 	return err;
