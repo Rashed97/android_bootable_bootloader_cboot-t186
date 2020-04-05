@@ -110,7 +110,11 @@ static status_t android_boot(void)
 {
 	status_t err = NO_ERROR;
 	tegrabl_error_t ret = TEGRABL_NO_ERROR;
+#ifdef CONFIG_FORCE_FASTBOOT_BOOT
+	bool is_enter_fastboot = true;
+#else
 	bool is_enter_fastboot = false;
+#endif
 	bool is_skip_menu = true;
 	struct tegrabl_kernel_bin kernel;
 

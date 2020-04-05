@@ -139,7 +139,11 @@ tegrabl_error_t check_enter_fastboot(bool *out)
 {
 	/* This function has to be implemented based on platform requirements */
 
+#ifdef CONFIG_FORCE_FASTBOOT_BOOT
+	static bool enter_fastboot = true;
+#else
 	static bool enter_fastboot;
+#endif
 	bool pmc_fastboot_flag;
 	tegrabl_error_t ret = TEGRABL_NO_ERROR;
 
