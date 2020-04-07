@@ -21,7 +21,12 @@ extern "C"
 {
 #endif
 
+#if CONFIG_BOOTIMG_HEADER_VERSION >= 3
+// Starting from bootimg header v3, pagesize is forced to be 4096 bytes
+#define ANDROID_HEADER_SIZE 4096
+#else
 #define ANDROID_HEADER_SIZE 2048
+#endif
 
 /**
  * Holds the boot.img (kernel + ramdisk) header.

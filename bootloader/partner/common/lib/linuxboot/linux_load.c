@@ -62,7 +62,7 @@ static tegrabl_error_t validate_boot_image(tegrabl_bootimg_header *hdr,
 	uint32_t known_crc = 0;
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 
-	pr_info("Checking boot.img header magic ... ");
+	pr_info("Checking boot.img header magic...\n");
 	/* Check header magic */
 	if (memcmp(hdr->magic, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
 		pr_error("Invalid boot.img @ %p (header magic mismatch)\n", hdr);
@@ -83,7 +83,7 @@ static tegrabl_error_t validate_vendor_boot_image(tegrabl_vendor_bootimg_header 
 {
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 
-	pr_info("Checking _vendorboot.img header magic ... ");
+	pr_info("Checking _vendorboot.img header magic...\n");
 	/* Check header magic */
 	if (memcmp(vndhdr->magic, VENDOR_BOOT_MAGIC, VENDOR_BOOT_MAGIC_SIZE)) {
 		pr_error("Invalid vendor_boot.img @ %p (header magic mismatch)\n", vndhdr);
@@ -116,7 +116,12 @@ static tegrabl_error_t extract_kernel(tegrabl_bootimg_header *hdr,
 
 	err = validate_boot_image(hdr, &hdr_crc);
 	if (err != TEGRABL_NO_ERROR) {
-		pr_error("Error %u failed to validate kernel\n", err);
+		pr_error("Error %u failed to validate boot.img\n", err);
+		return err;
+	}
+	err = validate_vendor_boot_image(vndhdr);
+	if (err != TEGRABL_NO_ERROR) {
+		pr_error("Error %u failed to validate vendor_boot.img\n", err);
 		return err;
 	}
 
