@@ -20,48 +20,61 @@
 
 const struct tegrabl_fastboot_partition_info
 	fastboot_partition_map_table[] = {
+#ifdef CONFIG_USES_DYNAMIC_PARTITIONS
+	{ "super", "super", NULL},
+#else /* !CONFIG_USES_DYNAMIC_PARTITIONS */
+#ifdef CONFIG_ENABLE_A_B_SLOT
+#ifdef CONFIG_SANE_PARTITIONS
+	{ "system", "system_a", "system_b"},
+#else
+	{ "system", "APP_a", "APP_b"},
+#endif /* CONFIG_SANE_PARTITIONS */
+	{ "vendor", "vendor_a", "vendor_b"},
+#else /* !CONFIG_ENABLE_A_B_SLOT */
+#ifdef CONFIG_SANE_PARTITIONS
+	{ "system", "system", NULL},
+#else
+	{ "system", "APP", NULL},
+#endif /* CONFIG_SANE_PARTITIONS */
+	{ "vendor", "vendor", NULL},
+#endif /* CONFIG_ENABLE_A_B_SLOT */
+#endif /* CONFIG_USES_DYNAMIC_PARTITIONS */
 #ifdef CONFIG_ENABLE_A_B_SLOT
 #ifdef CONFIG_SANE_PARTITIONS
 	{ "recovery", "recovery_a", "recovery_b"},
-	{ "system", "system_a", "system_b"},
 	{ "boot", "boot_a", "boot_b"},
 	{ "dtb", "dtb_a", "dtb_b"},
 	{ "dtbo", "dtbo_a", "dtbo_b"},
-#else
+#else /* !CONFIG_SANE_PARTITIONS */
 	{ "recovery", "SOS_a", "SOS_b"},
-	{ "system", "APP_a", "APP_b"},
 	{ "boot", "kernel_a", "kernel_b"},
 	{ "dtb", "kernel-dtb_a", "kernel-dtb_b"},
 	{ "dtbo", "kernel-dtbo_a", "kernel-dtbo_b"},
 #endif
-	{ "vendor", "vendor_a", "vendor_b"},
 	{ "vendor_boot", "vendor_boot_a", "vendor_boot_b"},
 	{ "bmp", "BMP_a", "BMP_b"},
-#else
+#else /* !CONFIG_ENABLE_A_B_SLOT */
 #ifdef CONFIG_SANE_PARTITIONS
 	{ "recovery", "recovery", NULL},
-	{ "system", "system", NULL},
 	{ "boot", "boot", NULL},
 	{ "dtb", "dtb", NULL},
 	{ "dtbo", "dtbo", NULL},
-#else
+#else /* !CONFIG_SANE_PARTITIONS */
 	{ "recovery", "SOS", NULL},
-	{ "system", "APP", NULL},
 	{ "boot", "kernel", NULL},
 	{ "dtb", "kernel-dtb", NULL},
 	{ "dtbo", "kernel-dtbo", NULL},
-#endif
-	{ "vendor", "vendor", NULL},
+#endif /* CONFIG_SANE_PARTITIONS */
 	{ "vendor_boot", "vendor_boot", NULL},
 	{ "bmp", "BMP", NULL},
-#endif
+#endif /* CONFIG_ENABLE_A_B_SLOT */
 #ifdef CONFIG_SANE_PARTITIONS
 	{ "cache", "cache", NULL},
 	{ "userdata", "userdata", NULL},
-#else
+#else /* !CONFIG_SANE_PARTITIONS */
 	{ "cache", "CAC", NULL},
 	{ "userdata", "UDA", NULL},
-#endif
+#endif /* CONFIG_SANE_PARTITIONS */
 	{ "rpb", "RPB", NULL},
 };
 
