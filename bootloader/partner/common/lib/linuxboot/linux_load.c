@@ -30,6 +30,7 @@
 
 static uint64_t ramdisk_load;
 static uint64_t ramdisk_size;
+static uint64_t vendor_ramdisk_size;
 static char bootimg_cmdline[BOOT_ARGS_SIZE + BOOT_EXTRA_ARGS_SIZE + VENDOR_BOOT_ARGS_SIZE + 1];
 
 /* maximum possible uncompressed kernel image size--60M */
@@ -46,7 +47,11 @@ void tegrabl_get_ramdisk_info(uint64_t *start, uint64_t *size)
 		*start = ramdisk_load;
 	}
 	if (size) {
+#if CONFIG_BOOTIMG_HEADER_VERSION >= 3
+		*size = ramdisk_size + vendor_ramdisk_size;
+#else
 		*size = ramdisk_size;
+#endif
 	}
 }
 
@@ -162,19 +167,36 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 {
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 	uint64_t ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in boot.img */
+	uint64_t vendor_ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in vendor_boot.img */
 
 	ramdisk_offset = ROUND_UP_POW2(vndhdr->page_size + hdr->kernel_size,
 								   vndhdr->page_size);
-
 	ramdisk_offset = (uintptr_t)hdr + ramdisk_offset;
 	ramdisk_load = RAMDISK_ADDRESS;
 	ramdisk_size = hdr->ramdisk_size;
 	if (ramdisk_offset != ramdisk_load) {
-		pr_info("Move ramdisk (len: %"PRIu64") from 0x%"PRIx64" to 0x%"PRIx64
+		pr_info("Move boot.img ramdisk (len: %"PRIu64") from 0x%"PRIx64" to 0x%"PRIx64
 				"\n", ramdisk_size, ramdisk_offset, ramdisk_load);
 		memmove((void *)((uintptr_t)ramdisk_load),
 				(void *)((uintptr_t)ramdisk_offset), ramdisk_size);
 	}
+#if CONFIG_BOOTIMG_HEADER_VERSION >= 3
+	/*
+	  TODO: Determine where 2112 came from:
+	  https://android.googlesource.com/platform/system/tools/mkbootimg/+/master/include/bootimg/bootimg.h#193
+	  Google lists the vendor_boot.img header size as 2112, likely to change
+	 */
+	vendor_ramdisk_offset = ROUND_UP_POW2(2112 + vndhdr->page_size - 1 ,
+								   vndhdr->page_size);
+	vendor_ramdisk_offset = (uintptr_t)vndhdr + vendor_ramdisk_offset;
+	vendor_ramdisk_size = vndhdr->vendor_ramdisk_size;
+	/* Move the vendor ramdisk to right after the generic ramdisk */
+	pr_info("Move vendor_boot.img ramdisk (len: %"PRIu64") from 0x%"PRIx64" to 0x%"PRIx64"\n",
+			vendor_ramdisk_size, vendor_ramdisk_offset, ramdisk_load + ramdisk_size);
+	memmove((void *)((uintptr_t)ramdisk_load + ramdisk_size),
+			(void *)((uintptr_t)vendor_ramdisk_offset), vendor_ramdisk_size);
+#endif /* CONFIG_BOOTIMG_HEADER_VERSION >= 3 */
+
 #if CONFIG_BOOTIMG_HEADER_VERSION >= 3
 	strncpy(bootimg_cmdline, (char *)hdr->cmdline, BOOT_ARGS_SIZE + BOOT_EXTRA_ARGS_SIZE);
 	strncat(bootimg_cmdline, (char *)vndhdr->cmdline, VENDOR_BOOT_ARGS_SIZE);
@@ -290,7 +312,7 @@ tegrabl_error_t tegrabl_load_kernel_and_dtb(
 #endif /* CONFIG_BOOTIMG_HEADER_VERSION */
 #else
 	hdr = (void *)((uintptr_t)BOOT_IMAGE_LOAD_ADDRESS);
-	// TODO: Add handling for vendor_boot.img here
+	vndhdr = (void *)((uintptr_t)VENDOR_BOOT_IMAGE_LOAD_ADDRESS);
 #endif
 
 load_dtb:

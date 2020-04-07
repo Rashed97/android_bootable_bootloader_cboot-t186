@@ -36,9 +36,13 @@
  *             |                                                  |
  *             |__________________________________________________|
  *             |                                                  |
- *             |                                                  | <- 320 MB
- *             |                   Boot.img                       |
- * 0xA8000000  |__________________________________________________|
+ *             |                                                  | <- 160 MB
+ *             |               vendor_boot.img                    |
+ * 0xB2000000->|__________________________________________________|
+ *             |                                                  |
+ *             |                                                  | <- 160 MB
+ *             |                   boot.img                       |
+ * 0xA8000000->|__________________________________________________|
  *             |                                                  |
  *             |                                                  |
  *             |                   Ramdisk                        | <- 176 MB
@@ -93,6 +97,7 @@
 
 #define RAMDISK_ADDRESS			0x9D000000
 #define BOOT_IMAGE_LOAD_ADDRESS	0xA8000000
+#define VENDOR_BOOT_IMAGE_LOAD_ADDRESS	0xB2000000
 #define NCT_PART_SIZE			0x00200000
 #define NCT_PART_LOAD_ADDRESS	0x95E00000
 #define WB0_IMAGE_LOAD_ADDRESS	0x94500000

@@ -39,6 +39,9 @@ struct tegrabl_binary_info
 	[TEGRABL_BINARY_KERNEL] = {
 			.load_address = (void *) BOOT_IMAGE_LOAD_ADDRESS
 	},
+	[TEGRABL_BINARY_KERNEL_VENDOR] = {
+			.load_address = (void *) VENDOR_BOOT_IMAGE_LOAD_ADDRESS
+	},
 	[TEGRABL_BINARY_KERNEL_DTB] = {
 			.load_address = (void *) DTB_LOAD_ADDRESS
 	},
