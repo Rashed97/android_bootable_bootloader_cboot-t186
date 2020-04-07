@@ -265,7 +265,7 @@ tegrabl_error_t tegrabl_load_kernel_and_dtb(
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 	void *kernel_dtbo = NULL;
 	tegrabl_bootimg_header *hdr = (void *)((uintptr_t)0xDEADDEA0);
-	tegrabl_vendor_bootimg_header *vndhdr = (void *)((uintptr_t)0xDEADDEA0);
+	tegrabl_vendor_bootimg_header *vndhdr = (void *)((uintptr_t)VENDOR_BOOT_IMAGE_LOAD_ADDRESS);
 
 	if (!kernel_entry_point || !kernel_dtb) {
 		err = TEGRABL_ERROR(TEGRABL_ERR_INVALID, 0);
