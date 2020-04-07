@@ -48,7 +48,7 @@ void tegrabl_get_ramdisk_info(uint64_t *start, uint64_t *size)
 	}
 	if (size) {
 #if CONFIG_BOOTIMG_HEADER_VERSION >= 3
-		*size = ramdisk_size + vendor_ramdisk_size;
+		*size = ROUND_UP_POW2(ramdisk_size, vndhdr->page_size) + vendor_ramdisk_size;
 #else
 		*size = ramdisk_size;
 #endif
@@ -74,8 +74,6 @@ static tegrabl_error_t validate_boot_image(tegrabl_bootimg_header *hdr,
 		err = TEGRABL_ERROR(TEGRABL_ERR_VERIFY_FAILED, 0);
 		goto fail;
 	}
-	pr_info("[OK]\n");
-
 	pr_info("Valid boot.img @ %p\n", hdr);
 
 fail:
@@ -88,14 +86,13 @@ static tegrabl_error_t validate_vendor_boot_image(tegrabl_vendor_bootimg_header 
 {
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 
-	pr_info("Checking _vendorboot.img header magic...\n");
+	pr_info("Checking vendor_boot.img header magic...\n");
 	/* Check header magic */
 	if (memcmp(vndhdr->magic, VENDOR_BOOT_MAGIC, VENDOR_BOOT_MAGIC_SIZE)) {
 		pr_error("Invalid vendor_boot.img @ %p (header magic mismatch)\n", vndhdr);
 		err = TEGRABL_ERROR(TEGRABL_ERR_VERIFY_FAILED, 0);
 		goto fail;
 	}
-	pr_info("[OK]\n");
 	pr_info("Valid vendor_boot.img @ %p\n", vndhdr);
 
 fail:
@@ -167,7 +164,6 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 {
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
 	uint64_t ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in boot.img */
-	uint64_t vendor_ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in vendor_boot.img */
 
 	ramdisk_offset = ROUND_UP_POW2(vndhdr->page_size + hdr->kernel_size,
 								   vndhdr->page_size);
@@ -181,6 +177,7 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 				(void *)((uintptr_t)ramdisk_offset), ramdisk_size);
 	}
 #if CONFIG_BOOTIMG_HEADER_VERSION >= 3
+	uint64_t vendor_ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in vendor_boot.img */
 	/*
 	  TODO: Determine where 2112 came from:
 	  https://android.googlesource.com/platform/system/tools/mkbootimg/+/master/include/bootimg/bootimg.h#193
@@ -190,10 +187,11 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 								   vndhdr->page_size);
 	vendor_ramdisk_offset = (uintptr_t)vndhdr + vendor_ramdisk_offset;
 	vendor_ramdisk_size = vndhdr->vendor_ramdisk_size;
+	uint64_t vendor_ramdisk_start = ROUND_UP_POW2(ramdisk_load + ramdisk_size, vndhdr->page_size);
 	/* Move the vendor ramdisk to right after the generic ramdisk */
 	pr_info("Move vendor_boot.img ramdisk (len: %"PRIu64") from 0x%"PRIx64" to 0x%"PRIx64"\n",
-			vendor_ramdisk_size, vendor_ramdisk_offset, ramdisk_load + ramdisk_size);
-	memmove((void *)((uintptr_t)ramdisk_load + ramdisk_size),
+			vendor_ramdisk_size, vendor_ramdisk_offset, vendor_ramdisk_start);
+	memmove((void *)((uintptr_t)vendor_ramdisk_start),
 			(void *)((uintptr_t)vendor_ramdisk_offset), vendor_ramdisk_size);
 #endif /* CONFIG_BOOTIMG_HEADER_VERSION >= 3 */
 
