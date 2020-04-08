@@ -189,8 +189,13 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 	  https://android.googlesource.com/platform/system/tools/mkbootimg/+/master/include/bootimg/bootimg.h#193
 	  Google lists the vendor_boot.img header size as 2112, likely to change
 	 */
+//	This calculation is yielding 8192 instead of 4096, need to adjust
+#if 0
 	vendor_ramdisk_offset = ROUND_UP_POW2(2112 + vndhdr->page_size - 1 ,
 								   vndhdr->page_size);
+#else
+	vendor_ramdisk_offset = 4096;
+#endif
 	pr_info("vendor_ramdisk_offset: %"PRIu64"\n", vendor_ramdisk_offset);
 	vendor_ramdisk_offset = (uintptr_t)vndhdr + vendor_ramdisk_offset;
 	vendor_ramdisk_size = vndhdr->vendor_ramdisk_size;
