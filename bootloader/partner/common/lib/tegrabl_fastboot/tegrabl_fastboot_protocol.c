@@ -170,6 +170,17 @@ static void cmd_reboot(const char *arg, void *data, uint32_t size)
 	(void)data;
 	(void)size;
 
+	if (!strcmp(arg, "recovery")) {
+		fastboot_okay("");
+		tegrabl_reboot_recovery();
+	} else if (!strcmp(arg, "bootloader")) {
+		fastboot_okay("");
+		tegrabl_reboot_fastboot();
+	} else if (!strcmp(arg, "fastboot")) {
+		fastboot_okay("");
+		// TODO: Implement boot into fastbootd
+	}
+
 	pr_info("Rebooting the device\n");
 
 	tegrabl_reset();

@@ -36,6 +36,14 @@ inline tegrabl_error_t tegrabl_reboot_forced_recovery(void)
 	return ops.sys_reboot_forced_recovery(NULL);
 }
 
+inline tegrabl_error_t tegrabl_reboot_recovery(void)
+{
+	if (!ops.sys_reboot_recovery) {
+		return TEGRABL_ERROR(TEGRABL_ERR_NOT_SUPPORTED, 0);
+	}
+	return ops.sys_reboot_recovery(NULL);
+}
+
 inline tegrabl_error_t tegrabl_reboot_fastboot(void)
 {
 	if (!ops.sys_reboot_fastboot) {

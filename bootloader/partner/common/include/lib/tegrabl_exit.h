@@ -20,6 +20,8 @@
  * @param sys_reset     API of board reboot
  * @param sys_reboot_fastboot API to set fastboot bit in pmic and reboot the
  *                      board to enter fastboot
+ * @param sys_reboot_recovery API to set android recovery bit in pmic and
+ *                      reboot the board to enter android recovery mode
  * @param sys_reboot_forced_recovery API to set forced recovery bit in pmic
  *                      and reboot the board to enter forced recovery mode
  */
@@ -27,6 +29,7 @@ struct tegrabl_exit_ops {
 	tegrabl_error_t (*sys_power_off)(void *param);
 	tegrabl_error_t (*sys_reset)(void *param);
 	tegrabl_error_t (*sys_reboot_fastboot)(void *param);
+	tegrabl_error_t (*sys_reboot_recovery)(void *param);
 	tegrabl_error_t (*sys_reboot_forced_recovery)(void *param);
 };
 
@@ -47,6 +50,12 @@ tegrabl_error_t tegrabl_poweroff(void);
  * @return TEGRABL_NO_ERROR if success else approprite error code
  */
 tegrabl_error_t tegrabl_reboot_fastboot(void);
+
+/**
+ * @brief Reset the board and enter android recovery
+ * @return TEGRABL_NO_ERROR if success else approprite error code
+ */
+tegrabl_error_t tegrabl_reboot_recovery(void);
 
 /**
  * @brief Reset the board and enter recovery

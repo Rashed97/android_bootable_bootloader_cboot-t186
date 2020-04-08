@@ -43,6 +43,15 @@ static tegrabl_error_t reboot_fastboot(void *param)
 	return TEGRABL_ERROR(TEGRABL_ERR_COMMAND_FAILED, 0);
 }
 
+static tegrabl_error_t reboot_recovery(void *param)
+{
+	/* set android recovery bit */
+	tegrabl_set_pmc_scratch0_flag(TEGRABL_PMC_SCRATCH0_FLAG_BOOT_RECOVERY_KERNEL, true);
+	reset(NULL);
+	/* Should not arrive here */
+	return TEGRABL_ERROR(TEGRABL_ERR_COMMAND_FAILED, 0);
+}
+
 static tegrabl_error_t reboot_forced_recovery(void *param)
 {
 	/* set recovery bit */
@@ -65,6 +74,7 @@ tegrabl_error_t tegrabl_exit_register(void)
 	ops->sys_power_off = power_off;
 	ops->sys_reset = reset;
 	ops->sys_reboot_fastboot = reboot_fastboot;
+	ops->sys_reboot_recovery = reboot_recovery;
 	ops->sys_reboot_forced_recovery = reboot_forced_recovery;
 
 	return TEGRABL_NO_ERROR;
