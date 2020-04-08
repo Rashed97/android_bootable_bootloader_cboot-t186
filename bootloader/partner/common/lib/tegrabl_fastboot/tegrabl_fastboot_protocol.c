@@ -159,6 +159,17 @@ static void fastboot_getvar(const char *arg, char *response)
 		if (error != TEGRABL_NO_ERROR) {
 			return;
 		}
+#if defined(CONFIG_USES_DYNAMIC_PARTITIONS)
+	} else if (IS_VAR_TYPE("is-userspace")) {
+		COPY_RESPONSE("no");
+	} else if (IS_VAR_TYPE("super-partition-name")) {
+		partinfo = tegrabl_fastboot_get_partinfo("super");
+		if (!partinfo) {
+			COPY_RESPONSE("No partition present with this name.");
+			return;
+		}
+		COPY_RESPONSE(partinfo->tegra_part_name);
+#endif
 	} else {
 		COPY_RESPONSE("Unknown var!");
 	}
