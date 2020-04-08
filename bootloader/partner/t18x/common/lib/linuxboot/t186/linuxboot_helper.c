@@ -585,9 +585,9 @@ static struct tegrabl_linuxboot_param extra_params[] = {
 	{ "androidboot.force_normal_boot", set_normal_boot_flag, NULL },
 #elif defined(CONFIG_ENABLE_SYSTEM_AS_ROOT)
 	{ "skip_initramfs", add_boot_recovery_info, NULL },
+	{ "root", add_rootfs_info, NULL },
 #endif /* CONFIG_USES_DYNAMIC_PARTITIONS || CONFIG_ENABLE_SYSTEM_AS_ROOT */
 #endif
-	{ "root", add_rootfs_info, NULL },
 	{ "androidboot.serialno", add_serialno, NULL },
 	{ "vpr", tegrabl_linuxboot_add_vpr_info, NULL },
 	{ "vpr_resize", tegrabl_linuxboot_add_vprresize_info, NULL },
