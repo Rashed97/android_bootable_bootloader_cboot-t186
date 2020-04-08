@@ -159,6 +159,21 @@ static tegrabl_error_t extract_kernel(tegrabl_bootimg_header *hdr,
 	return TEGRABL_NO_ERROR;
 }
 
+static tegrabl_error_t validate_ramdisk(uint64_t addr_to_check)
+{
+	tegrabl_error_t err = TEGRABL_NO_ERROR;
+	unsigned char gzip_header[] = { 0x1f, 0x8b };
+
+	/* Check if ramdisk is valid */
+	if (memcmp((void *)addr_to_check, gzip_header, 2)) {
+		pr_error("Invalid vendor ramdisk image @ %p (header magic mismatch)\n", (void *)addr_to_check);
+		pr_error("Byte 0: expected: %d, got: %d\n", gzip_header[0], ((unsigned char*)addr_to_check)[0]);
+		pr_error("Byte 1: expected: %d, got: %d\n", gzip_header[1], ((unsigned char*)addr_to_check)[1]);
+		err = TEGRABL_ERROR(TEGRABL_ERR_VERIFY_FAILED, 0);
+	}
+	return err;
+}
+
 static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 								   tegrabl_vendor_bootimg_header *vndhdr)
 {
@@ -176,8 +191,15 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 	 */
 	vendor_ramdisk_offset = ROUND_UP_POW2(2112 + vndhdr->page_size - 1 ,
 								   vndhdr->page_size);
+	pr_info("vendor_ramdisk_offset: %"PRIu64"\n", vendor_ramdisk_offset);
 	vendor_ramdisk_offset = (uintptr_t)vndhdr + vendor_ramdisk_offset;
 	vendor_ramdisk_size = vndhdr->vendor_ramdisk_size;
+	/* Check vendor_ramdisk before copying */
+	err = validate_ramdisk(vendor_ramdisk_offset);
+	if (err) {
+		goto fail;
+	}
+	pr_info("Valid vendor ramdisk image @ %p\n", (void *)vendor_ramdisk_offset);
 	/* Move vendor ramdisk into memory first */
 	pr_info("Move vendor_boot.img ramdisk (len: %"PRIu64") from 0x%"PRIx64" to 0x%"PRIx64"\n",
 			vendor_ramdisk_size, vendor_ramdisk_offset, ramdisk_load);
@@ -189,6 +211,12 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 	ramdisk_offset = (uintptr_t)hdr + ramdisk_offset;
 	ramdisk_size = hdr->ramdisk_size;
 	uint64_t generic_ramdisk_start = ramdisk_load + vendor_ramdisk_size;
+	/* Check ramdisk before copying */
+	err = validate_ramdisk(ramdisk_offset);
+	if (err) {
+		goto fail;
+	}
+	pr_info("Valid generic ramdisk image @ %p\n", (void *)ramdisk_offset);
 	/* Move generic ramdisk to right after vendor ramdisk */
 	if (ramdisk_offset != ramdisk_load) {
 		pr_info("Move boot.img ramdisk (len: %"PRIu64") from 0x%"PRIx64" to 0x%"PRIx64
@@ -220,6 +248,7 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 #endif
 	pr_info("Loaded cmdline from bootimage: %s\n", bootimg_cmdline);
 
+fail:
 	return err;
 }
 
