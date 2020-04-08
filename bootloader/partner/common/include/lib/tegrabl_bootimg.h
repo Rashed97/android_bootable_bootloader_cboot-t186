@@ -28,6 +28,9 @@ extern "C"
 #define ANDROID_HEADER_SIZE 2048
 #endif
 
+// This will probably change at some point, 2112 for now on v3
+#define VENDOR_HEADER_SIZE 2112
+
 /**
  * Holds the boot.img (kernel + ramdisk) header.
  *
