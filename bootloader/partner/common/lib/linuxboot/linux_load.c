@@ -48,7 +48,7 @@ void tegrabl_get_ramdisk_info(uint64_t *start, uint64_t *size)
 	}
 	if (size) {
 #if CONFIG_BOOTIMG_HEADER_VERSION >= 3
-		*size = ROUND_UP_POW2(ramdisk_size, vndhdr->page_size) + vendor_ramdisk_size;
+		*size = vendor_ramdisk_size + ramdisk_size;
 #else
 		*size = ramdisk_size;
 #endif
@@ -163,20 +163,11 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 								   tegrabl_vendor_bootimg_header *vndhdr)
 {
 	tegrabl_error_t err = TEGRABL_NO_ERROR;
-	uint64_t ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in boot.img */
-
-	ramdisk_offset = ROUND_UP_POW2(vndhdr->page_size + hdr->kernel_size,
-								   vndhdr->page_size);
-	ramdisk_offset = (uintptr_t)hdr + ramdisk_offset;
 	ramdisk_load = RAMDISK_ADDRESS;
-	ramdisk_size = hdr->ramdisk_size;
-	if (ramdisk_offset != ramdisk_load) {
-		pr_info("Move boot.img ramdisk (len: %"PRIu64") from 0x%"PRIx64" to 0x%"PRIx64
-				"\n", ramdisk_size, ramdisk_offset, ramdisk_load);
-		memmove((void *)((uintptr_t)ramdisk_load),
-				(void *)((uintptr_t)ramdisk_offset), ramdisk_size);
-	}
 #if CONFIG_BOOTIMG_HEADER_VERSION >= 3
+	/* NOTE: Vendor ramdisk must come first */
+
+	uint64_t ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in boot.img */
 	uint64_t vendor_ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in vendor_boot.img */
 	/*
 	  TODO: Determine where 2112 came from:
@@ -187,12 +178,37 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 								   vndhdr->page_size);
 	vendor_ramdisk_offset = (uintptr_t)vndhdr + vendor_ramdisk_offset;
 	vendor_ramdisk_size = vndhdr->vendor_ramdisk_size;
-	uint64_t vendor_ramdisk_start = ROUND_UP_POW2(ramdisk_load + ramdisk_size, vndhdr->page_size);
-	/* Move the vendor ramdisk to right after the generic ramdisk */
+	/* Move vendor ramdisk into memory first */
 	pr_info("Move vendor_boot.img ramdisk (len: %"PRIu64") from 0x%"PRIx64" to 0x%"PRIx64"\n",
-			vendor_ramdisk_size, vendor_ramdisk_offset, vendor_ramdisk_start);
-	memmove((void *)((uintptr_t)vendor_ramdisk_start),
+			vendor_ramdisk_size, vendor_ramdisk_offset, ramdisk_load);
+	memmove((void *)((uintptr_t)ramdisk_load),
 			(void *)((uintptr_t)vendor_ramdisk_offset), vendor_ramdisk_size);
+
+	ramdisk_offset = ROUND_UP_POW2(vndhdr->page_size + hdr->kernel_size,
+								   vndhdr->page_size);
+	ramdisk_offset = (uintptr_t)hdr + ramdisk_offset;
+	ramdisk_size = hdr->ramdisk_size;
+	uint64_t generic_ramdisk_start = ramdisk_load + vendor_ramdisk_size;
+	/* Move generic ramdisk to right after vendor ramdisk */
+	if (ramdisk_offset != ramdisk_load) {
+		pr_info("Move boot.img ramdisk (len: %"PRIu64") from 0x%"PRIx64" to 0x%"PRIx64
+				"\n", ramdisk_size, ramdisk_offset, generic_ramdisk_start);
+		memmove((void *)((uintptr_t)generic_ramdisk_start),
+				(void *)((uintptr_t)ramdisk_offset), ramdisk_size);
+	}
+#else /* CONFIG_BOOTIMG_HEADER_VERSION < 3 */
+	uint64_t ramdisk_offset = (uint64_t)NULL; /* Offset of 1st ramdisk byte in boot.img */
+
+	ramdisk_offset = ROUND_UP_POW2(vndhdr->page_size + hdr->kernel_size,
+								   vndhdr->page_size);
+	ramdisk_offset = (uintptr_t)hdr + ramdisk_offset;
+	ramdisk_size = hdr->ramdisk_size;
+	if (ramdisk_offset != ramdisk_load) {
+		pr_info("Move boot.img ramdisk (len: %"PRIu64") from 0x%"PRIx64" to 0x%"PRIx64
+				"\n", ramdisk_size, ramdisk_offset, ramdisk_load);
+		memmove((void *)((uintptr_t)ramdisk_load),
+				(void *)((uintptr_t)ramdisk_offset), ramdisk_size);
+	}
 #endif /* CONFIG_BOOTIMG_HEADER_VERSION >= 3 */
 
 #if CONFIG_BOOTIMG_HEADER_VERSION >= 3
