@@ -301,6 +301,7 @@ static int add_ratchet_values(char *cmdline, int len, char *param, void *priv)
 	return tegrabl_snprintf(cmdline, len, "%s=%u.%u.%u ", param,
 							rb_ratchet, mb1_ratchet, mts_ratchet);
 }
+#endif /* CONFIG_ENABLE_A_B_SLOT */
 
 bool is_system_as_root_enabled(void)
 {
@@ -331,11 +332,12 @@ fail:
 	return ret;
 }
 
-#if defined(CONFIG_ENABLE_SYSTEM_AS_ROOT)
 static int add_boot_recovery_info(char *cmdline, int len, char *param,
 								  void *priv)
 {
+#if defined(CONFIG_ENABLE_SYSTEM_AS_ROOT)
 	enum tegrabl_binary_type bin_type;
+#endif
 	int ret = -1;
 	bool is_system_root_enabled;
 
@@ -353,18 +355,19 @@ static int add_boot_recovery_info(char *cmdline, int len, char *param,
 		goto done;
 	}
 
+#if defined(CONFIG_ENABLE_SYSTEM_AS_ROOT)
 	bin_type = tegrabl_get_kernel_type();
 	if (bin_type != TEGRABL_BINARY_RECOVERY_KERNEL) {
 		ret = tegrabl_snprintf(cmdline, len, "%s init=/init ", param);
 	} else {
 		ret = tegrabl_snprintf(cmdline, len, "init=/init ");
 	}
-
+#else
+	ret = tegrabl_snprintf(cmdline, len, "init=/init ");
+#endif /* CONFIG_ENABLE_SYSTEM_AS_ROOT */
 done:
 	return ret;
 }
-#endif /* CONFIG_ENABLE_SYSTEM_AS_ROOT */
-#endif
 
 static int tegrabl_linuxboot_add_vpr_info(char *cmdline, int len,
 										  char *param, void *priv)
@@ -501,11 +504,12 @@ static int add_vbmeta_info(char *cmdline, int len, char *param, void *priv)
 #endif
 static int add_rootfs_info(char *cmdline, int len, char *param, void *priv)
 {
+	int ret = -1;
+#if defined(CONFIG_ENABLE_SYSTEM_AS_ROOT) && !defined(CONFIG_USES_DYNAMIC_PARTITIONS)
 	struct tegrabl_partition current_system_partition = {0};
 	char *root_part_name;
 	char *slot_suffix;
 	enum tegrabl_binary_type bin_type;
-	int ret = -1;
 
 	slot_suffix = "";
 #if defined(CONFIG_ENABLE_A_B_SLOT)
@@ -534,7 +538,10 @@ static int add_rootfs_info(char *cmdline, int len, char *param, void *priv)
 		// Don't set root= in recovery as recovery ramdisk lives in boot.img ramdisk
 		ret = tegrabl_snprintf(cmdline, len, " ");
 	}
-
+#else
+	// Set "ro rootwait" on everything if SAR is disabled or dynamic partitions is enabled
+	ret = tegrabl_snprintf(cmdline, len, "ro rootwait ");
+#endif /* CONFIG_ENABLE_SYSTEM_AS_ROOT && !CONFIG_USES_DYNAMIC_PARTITIONS */
 	return ret;
 }
 
@@ -571,7 +578,7 @@ static struct tegrabl_linuxboot_param extra_params[] = {
 #if defined(CONFIG_ENABLE_VERIFIED_BOOT)
 	{ "androidboot.verifiedbootstate", add_vb_boot_state, NULL },
 	{ "androidboot.vbmeta", add_vbmeta_info, NULL },
-#endif
+#endif  /* CONFIG_ENABLE_VERIFIED_BOOT */
 #endif	/* !OS_IS_L4T */
 #if defined(CONFIG_ENABLE_A_B_SLOT)
 #if defined(CONFIG_OS_IS_L4T)
@@ -580,13 +587,12 @@ static struct tegrabl_linuxboot_param extra_params[] = {
 #else
 	{ "androidboot.slot_suffix", add_boot_slot_suffix, NULL },
 	{ "androidboot.ratchetvalues", add_ratchet_values, NULL },
-#endif
+#endif /* CONFIG_OS_IS_L4T */
+#endif /* CONFIG_ENABLE_A_B_SLOT */
 #if defined(CONFIG_USES_DYNAMIC_PARTITIONS)
 	{ "androidboot.force_normal_boot", set_normal_boot_flag, NULL },
-#elif defined(CONFIG_ENABLE_SYSTEM_AS_ROOT)
+#endif /* CONFIG_USES_DYNAMIC_PARTITIONS */
 	{ "skip_initramfs", add_boot_recovery_info, NULL },
-#endif /* CONFIG_USES_DYNAMIC_PARTITIONS || CONFIG_ENABLE_SYSTEM_AS_ROOT */
-#endif
 	{ "root", add_rootfs_info, NULL },
 	{ "androidboot.serialno", add_serialno, NULL },
 	{ "vpr", tegrabl_linuxboot_add_vpr_info, NULL },
