@@ -227,7 +227,7 @@ static int tegrabl_linuxboot_add_secureos_name(char *cmdline, int len,
 static int tegrabl_linuxboot_add_bootimg_cmdline(char *cmdline, int len,
 	char *param, void *priv)
 {
-	return tegrabl_snprintf(cmdline, len, "%s", tegrabl_get_bootimg_cmdline());
+	return tegrabl_snprintf(cmdline, len, "%s ", tegrabl_get_bootimg_cmdline());
 }
 
 static struct tegrabl_linuxboot_param common_params[] = {
