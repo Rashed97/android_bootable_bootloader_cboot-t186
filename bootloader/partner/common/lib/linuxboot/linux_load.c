@@ -31,7 +31,7 @@
 static uint64_t ramdisk_load;
 static uint64_t ramdisk_size;
 static uint64_t vendor_ramdisk_size;
-static char bootimg_cmdline[BOOT_ARGS_SIZE + BOOT_EXTRA_ARGS_SIZE + VENDOR_BOOT_ARGS_SIZE + 1];
+static char bootimg_cmdline[BOOT_ARGS_SIZE + BOOT_EXTRA_ARGS_SIZE + VENDOR_BOOT_ARGS_SIZE + 2];
 
 /* maximum possible uncompressed kernel image size--60M */
 #define MAX_KERNEL_IMAGE_SIZE (1024 * 1024 * 60)
@@ -240,6 +240,7 @@ static tegrabl_error_t extract_ramdisk(tegrabl_bootimg_header *hdr,
 
 #if CONFIG_BOOTIMG_HEADER_VERSION >= 3
 	strncpy(bootimg_cmdline, (char *)hdr->cmdline, BOOT_ARGS_SIZE + BOOT_EXTRA_ARGS_SIZE);
+	strncat(bootimg_cmdline, " ", 1);
 	strncat(bootimg_cmdline, (char *)vndhdr->cmdline, VENDOR_BOOT_ARGS_SIZE);
 #else
 	strncpy(bootimg_cmdline, (char *)hdr->cmdline, BOOT_ARGS_SIZE);
