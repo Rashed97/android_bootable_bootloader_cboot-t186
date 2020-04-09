@@ -63,12 +63,22 @@ static char *tegrabl_get_partition_name(enum tegrabl_binary_type bin_type,
 		[TEGRABL_BINARY_KERNEL] = {"boot"},
 		[TEGRABL_BINARY_KERNEL_DTB] = {"dtb"},
 		[TEGRABL_BINARY_KERNEL_DTBO] = {"dtbo"},
+#if defined(CONFIG_ENABLE_A_B_SLOT)
+		/* If we're A/B, then boot into the normal bootimg as recovery lives there on A/B*/
+		[TEGRABL_BINARY_RECOVERY_KERNEL] = {"boot"},
+#else
 		[TEGRABL_BINARY_RECOVERY_KERNEL] = {"recovery"},
+#endif
 #else
 		[TEGRABL_BINARY_KERNEL] = {"kernel"},
 		[TEGRABL_BINARY_KERNEL_DTB] = {"kernel-dtb"},
 		[TEGRABL_BINARY_KERNEL_DTBO] = {"kernel-dtbo"},
+#if defined(CONFIG_ENABLE_A_B_SLOT)
+		/* If we're A/B, then boot into the normal bootimg as recovery lives there on A/B*/
+		[TEGRABL_BINARY_RECOVERY_KERNEL] = {"kernel"},
+#else
 		[TEGRABL_BINARY_RECOVERY_KERNEL] = {"SOS"},
+#endif
 #endif
 		[TEGRABL_BINARY_KERNEL_VENDOR] = {"vendor_boot"},
 		[TEGRABL_BINARY_NCT] = {"NCT"}
