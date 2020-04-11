@@ -335,6 +335,13 @@ static TEGRABL_INLINE void mb1_print_cpucore_info(void)
 enum tegrabl_binary_type  tegrabl_get_kernel_type(void);
 
 /**
+ * @brief Set the recovery kernel bit in scratch register
+ *
+ * @return none
+ */
+void tegrabl_set_recovery_kernel(void);
+
+/**
  * @brief Set A/B boot active slot number info into scratch register
  *
  * @param slot_info the boot slot number with flags

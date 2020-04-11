@@ -582,6 +582,11 @@ enum tegrabl_binary_type tegrabl_get_kernel_type(void)
 	return bin_type;
 }
 
+void tegrabl_set_recovery_kernel(void)
+{
+	tegrabl_set_pmc_scratch0_flag(TEGRABL_PMC_SCRATCH0_FLAG_BOOT_RECOVERY_KERNEL, true);
+}
+
 tegrabl_error_t tegrabl_register_prod_settings(uint32_t *prod_settings,
 		uint32_t num_settings)
 {
