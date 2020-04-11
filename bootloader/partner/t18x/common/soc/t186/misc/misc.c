@@ -578,7 +578,8 @@ enum tegrabl_binary_type tegrabl_get_kernel_type(void)
 		bin_type = TEGRABL_BINARY_RECOVERY_KERNEL;
 		pr_info("Kernel type = Recovery\n");
 	}
-return bin_type;
+
+	return bin_type;
 }
 
 tegrabl_error_t tegrabl_register_prod_settings(uint32_t *prod_settings,
