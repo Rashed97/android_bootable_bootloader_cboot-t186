@@ -577,10 +577,12 @@ static tegrabl_error_t fastboot_erase_data(char *response)
 	if (error != TEGRABL_NO_ERROR)
 		return error;
 
+#ifndef CONFIG_ENABLE_A_B_SLOT
 	/* cache partition is not present from Android N and later */
 	error = fastboot_erase_partition("cache", true);
 	if (error != TEGRABL_NO_ERROR)
 		return error;
+#endif /* CONFIG_ENABLE_A_B_SLOT */
 
 	return TEGRABL_NO_ERROR;
 }

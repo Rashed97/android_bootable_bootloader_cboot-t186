@@ -67,12 +67,15 @@ const struct tegrabl_fastboot_partition_info
 #endif /* CONFIG_SANE_PARTITIONS */
 	{ "vendor_boot", "vendor_boot", NULL},
 	{ "bmp", "BMP", NULL},
-#endif /* CONFIG_ENABLE_A_B_SLOT */
 #ifdef CONFIG_SANE_PARTITIONS
 	{ "cache", "cache", NULL},
-	{ "userdata", "userdata", NULL},
 #else /* !CONFIG_SANE_PARTITIONS */
 	{ "cache", "CAC", NULL},
+#endif /* CONFIG_SANE_PARTITIONS */
+#endif /* CONFIG_ENABLE_A_B_SLOT */
+#ifdef CONFIG_SANE_PARTITIONS
+	{ "userdata", "userdata", NULL},
+#else /* !CONFIG_SANE_PARTITIONS */
 	{ "userdata", "UDA", NULL},
 #endif /* CONFIG_SANE_PARTITIONS */
 	{ "rpb", "RPB", NULL},
