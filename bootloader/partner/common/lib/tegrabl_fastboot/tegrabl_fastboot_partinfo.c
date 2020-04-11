@@ -78,6 +78,9 @@ const struct tegrabl_fastboot_partition_info
 #else /* !CONFIG_SANE_PARTITIONS */
 	{ "userdata", "UDA", NULL},
 #endif /* CONFIG_SANE_PARTITIONS */
+#ifdef CONFIG_USES_METADATA
+	{ "metadata", "metadata", NULL},
+#endif /* CONFIG_USES_METADATA */
 	{ "rpb", "RPB", NULL},
 };
 
