@@ -30,12 +30,13 @@ MODULE_DEPS += \
 	$(LOCAL_DIR)/../../../../common/lib/tegrabl_fastboot \
 	$(LOCAL_DIR)/../../../../common/lib/tegrabl_frp \
 	$(LOCAL_DIR)/../../../common/drivers/soc/t186/wdt \
-	$(LOCAL_DIR)/verified_boot
 
 GLOBAL_INCLUDES += \
 	$(LOCAL_DIR) \
 	../../common/include \
-	$(LOCAL_DIR)/verified_boot
+
+MODULE_DEPS += $(LOCAL_DIR)/verified_boot/vblib_v1
+GLOBAL_INCLUDES += $(LOCAL_DIR)/verified_boot/vblib_v1
 
 MODULE_SRCS += \
 	$(LOCAL_DIR)/android_boot.c \
