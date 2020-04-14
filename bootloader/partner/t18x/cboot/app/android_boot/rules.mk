@@ -35,8 +35,14 @@ GLOBAL_INCLUDES += \
 	$(LOCAL_DIR) \
 	../../common/include \
 
+ifeq ($(CONFIG_USES_VBMETA),1)
+# verified boot 2.0
+MODULE_DEPS += $(LOCAL_DIR)/verified_boot/vblib_v2
+GLOBAL_INCLUDES += $(LOCAL_DIR)/verified_boot/vblib_v2
+else
 MODULE_DEPS += $(LOCAL_DIR)/verified_boot/vblib_v1
 GLOBAL_INCLUDES += $(LOCAL_DIR)/verified_boot/vblib_v1
+endif
 
 MODULE_SRCS += \
 	$(LOCAL_DIR)/android_boot.c \
