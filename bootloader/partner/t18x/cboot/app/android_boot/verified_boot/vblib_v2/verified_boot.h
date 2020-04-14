@@ -92,13 +92,15 @@ uint32_t smc_call(uint32_t arg0, uintptr_t arg1, uintptr_t arg2);
  *        signature, pass params to tlk, show verified boot UI
  *
  * @param hdr boot.img header address
+ * @param vndhdr vendor_boot.img header address
  * @param kernel_dtb kernel-dtb address
  * @param kernel_dtbo kernel-dtbo address
  *
  * @return NO_ERROR if all process is successfully, else apt error
  */
 
-tegrabl_error_t verify_boot(union tegrabl_bootimg_header *hdr,
+tegrabl_error_t verify_boot(tegrabl_bootimg_header *hdr,
+							tegrabl_vendor_bootimg_header *vndhdr,
 							void *kernel_dtb, void *kernel_dtbo);
 
 #endif
