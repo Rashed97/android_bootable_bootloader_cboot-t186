@@ -340,6 +340,7 @@ enum tegrabl_binary_type  tegrabl_get_kernel_type(void);
  * @return none
  */
 void tegrabl_set_recovery_kernel(void);
+extern bool selected_recovery_kernel;
 
 /**
  * @brief Set A/B boot active slot number info into scratch register

@@ -562,6 +562,7 @@ bool tegrabl_is_wdt_enable(void)
 	return (odmdata_wdt & TEGRA_WDT_MASK) && !halt_in_fiq;
 }
 
+bool selected_recovery_kernel = false;
 enum tegrabl_binary_type tegrabl_get_kernel_type(void)
 {
 	bool boot_recovery_kernel = false;
@@ -571,7 +572,7 @@ enum tegrabl_binary_type tegrabl_get_kernel_type(void)
 								 TEGRABL_PMC_SCRATCH0_FLAG_BOOT_RECOVERY_KERNEL,
 								 &boot_recovery_kernel);
 
-	if (boot_recovery_kernel == false) {
+	if (boot_recovery_kernel == false && selected_recovery_kernel == false) {
 		bin_type = TEGRABL_BINARY_KERNEL;
 		pr_info("Kernel type = Normal\n");
 	} else {

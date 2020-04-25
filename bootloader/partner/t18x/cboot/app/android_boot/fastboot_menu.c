@@ -26,7 +26,7 @@ static tegrabl_error_t fastboot_menu_continue(void *arg)
 	kernel.bin_type = tegrabl_get_kernel_type();
 #if defined(CONFIG_ENABLE_RECOVERY_AS_BOOT) || CONFIG_BOOTIMG_HEADER_VERSION >= 3
 	if (kernel.bin_type == TEGRABL_BINARY_RECOVERY_KERNEL)
-		tegrabl_set_recovery_kernel();
+		selected_recovery_kernel = true;
 #endif
 
 	ret = load_and_boot_kernel(&kernel);
@@ -43,7 +43,7 @@ static tegrabl_error_t fastboot_menu_recovery(void *arg)
 	struct tegrabl_kernel_bin kernel;
 	kernel.bin_type = TEGRABL_BINARY_RECOVERY_KERNEL;
 #if defined(CONFIG_ENABLE_RECOVERY_AS_BOOT) || CONFIG_BOOTIMG_HEADER_VERSION >= 3
-	tegrabl_set_recovery_kernel();
+	selected_recovery_kernel = true;
 #endif
 
 	ret = load_and_boot_kernel(&kernel);
