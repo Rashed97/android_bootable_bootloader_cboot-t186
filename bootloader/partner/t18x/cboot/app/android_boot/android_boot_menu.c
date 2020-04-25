@@ -24,8 +24,10 @@ static tegrabl_error_t android_menu_continue(void *arg)
 	(void)arg;
 	struct tegrabl_kernel_bin kernel;
 	kernel.bin_type = tegrabl_get_kernel_type();
+#if defined(CONFIG_ENABLE_RECOVERY_AS_BOOT) || CONFIG_BOOTIMG_HEADER_VERSION >= 3
 	if (kernel.bin_type == TEGRABL_BINARY_RECOVERY_KERNEL)
 		tegrabl_set_recovery_kernel();
+#endif
 
 	ret = load_and_boot_kernel(&kernel);
 	if (ret != TEGRABL_NO_ERROR)
@@ -49,7 +51,9 @@ static tegrabl_error_t android_menu_recovery(void *arg)
 	(void)arg;
 	struct tegrabl_kernel_bin kernel;
 	kernel.bin_type = TEGRABL_BINARY_RECOVERY_KERNEL;
+#if defined(CONFIG_ENABLE_RECOVERY_AS_BOOT) || CONFIG_BOOTIMG_HEADER_VERSION >= 3
 	tegrabl_set_recovery_kernel();
+#endif
 
 	ret = load_and_boot_kernel(&kernel);
 	if (ret != TEGRABL_NO_ERROR)
