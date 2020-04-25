@@ -593,6 +593,7 @@ static tegrabl_error_t tegrabl_update_tos_nodes(void *fdt)
 	tegrabl_error_t err = 0;
 	enum tegrabl_tos_type tos_type = 0;
 	int node, fdt_err;
+	char *tos_names[3] = { NULL, "tlk", "trusty" };
 
 	err = tegrabl_linuxboot_helper_get_info(TEGRABL_LINUXBOOT_INFO_SECUREOS,
 			NULL, &tos_type);
@@ -625,6 +626,7 @@ static tegrabl_error_t tegrabl_update_tos_nodes(void *fdt)
 	}
 
 	/* enable the node */
+	pr_info("Enable TOS: %s\n", tos_names[tos_type]);
 	fdt_err = fdt_setprop_string(fdt, node, "status", "okay");
 	if (fdt_err < 0) {
 		err = TEGRABL_ERROR(TEGRABL_ERR_DT_PROP_ADD_FAILED, 0);
